@@ -23,20 +23,19 @@ function onInstall(e) {
 function onOpen(e) {
   SlidesApp.getUi()
     .createAddonMenu()
-    .addItem('เปิดหน้าต่าง Second Brain', 'showOverlay')
+    .addItem('เปิดแผง Second Brain', 'showPanel')
     .addToUi();
 }
 
 /**
- * Show the context as a floating (modeless) dialog overlaying the editor.
- * The user can keep editing slides while it stays open.
+ * Show the context in a docked sidebar. A sidebar lives in the right rail
+ * and never covers the slide canvas, so it does not block editing.
  */
-function showOverlay() {
-  var html = HtmlService.createHtmlOutputFromFile('Overlay')
-    .setWidth(380)
-    .setHeight(560)
-    .setTitle('Slides Second Brain');
-  SlidesApp.getUi().showModelessDialog(html, 'Slides Second Brain');
+function showPanel() {
+  var html = HtmlService.createHtmlOutputFromFile('Sidebar').setTitle(
+    'Slides Second Brain'
+  );
+  SlidesApp.getUi().showSidebar(html);
 }
 
 /**
