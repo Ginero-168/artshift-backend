@@ -7,12 +7,12 @@
  */
 
 /**
- * Homepage trigger (common + slides host). See appsscript.json.
- * @param {Object} e Event object provided by the add-on runtime.
- * @return {GoogleAppsScript.Card_Service.Card}
+ * Runs once when the add-on is installed; build the menu immediately so the
+ * user does not have to reload the document first.
+ * @param {Object} e
  */
-function onHomepage(e) {
-  return buildHomepageCard();
+function onInstall(e) {
+  onOpen(e);
 }
 
 /**

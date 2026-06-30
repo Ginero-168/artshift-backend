@@ -5,22 +5,8 @@
   "runtimeVersion": "V8",
   "oauthScopes": [
     "https://www.googleapis.com/auth/presentations.currentonly",
+    "https://www.googleapis.com/auth/script.container.ui",
     "https://www.googleapis.com/auth/script.external_request",
     "https://www.googleapis.com/auth/script.locale"
-  ],
-  "addOns": {
-    "common": {
-      "name": "Slides Second Brain",
-      "logoUrl": "https://www.gstatic.com/images/branding/product/2x/apps_script_48dp.png",
-      "useLocaleFromApp": true,
-      "homepageTrigger": {
-        "runFunction": "onHomepage"
-      }
-    },
-    "slides": {
-      "homepageTrigger": {
-        "runFunction": "onHomepage"
-      }
-    }
-  }
+  ]
 }
