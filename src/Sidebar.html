@@ -23,8 +23,11 @@
       .wrap { display: flex; flex-direction: column; height: 100%; }
       header { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
       header .title { font-weight: 500; font-size: 14px; flex: 1; }
-      header .back { color: var(--accent); cursor: pointer; font-size: 13px; display: none; }
+      header .back { color: var(--accent); cursor: pointer; font-size: 13px; display: none; background: none; border: none; padding: 0; width: auto; }
+      header .back:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       main { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      @media (prefers-reduced-motion: reduce) { .spinner { animation: none; border: 2px solid var(--accent); } }
 
       section { padding: 14px 0; border-bottom: 1px solid var(--line); }
       section > h2 {
@@ -46,8 +49,13 @@
         background: #fff;
         cursor: pointer;
         transition: border-color 0.15s, box-shadow 0.15s;
+        width: 100%;
+        text-align: left;
+        appearance: none;
+        -webkit-appearance: none;
       }
       .tool-btn:hover { border-color: var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+      .tool-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
       .tool-btn .icon {
         width: 28px; height: 28px; border-radius: 6px; background: var(--surface);
         display: flex; align-items: center; justify-content: center;
@@ -79,8 +87,11 @@
         text-align: center;
         cursor: pointer;
         background: #fff;
+        appearance: none;
+        -webkit-appearance: none;
       }
       .chip:hover { border-color: var(--accent); color: var(--accent); }
+      .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
       label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
       .field { margin-bottom: 10px; }
@@ -125,6 +136,22 @@
       .status { font-size: 12px; margin-top: 10px; min-height: 16px; }
       .status.ok { color: #188038; }
       .status.err { color: #c5221f; }
+      .preview-box {
+        border: 1px dashed var(--line);
+        border-radius: 8px;
+        padding: 12px;
+        min-height: 48px;
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+      }
+      .preview-box .preview-text {
+        max-width: 100%;
+        word-break: break-word;
+        line-height: 1.4;
+      }
 
       .selected-badge {
         font-size: 12px;
@@ -162,7 +189,7 @@
   <body>
     <div class="wrap">
       <header>
-        <span class="back" id="backBtn" onclick="showMain()">← กลับ</span>
+        <button class="back" id="backBtn" onclick="showMain()" aria-label="กลับหน้าหลัก">← กลับ</button>
         <span class="title" id="pageTitle">Mighty Slide</span>
       </header>
 
@@ -171,20 +198,20 @@
         <div id="mainView">
           <section>
             <h2>เครื่องมือ</h2>
-            <div class="tool-btn" onclick="showTextPanel()">
-              <div class="icon">T</div>
+            <button class="tool-btn" onclick="showTextPanel()" aria-label="เปิดแผงปรับข้อความ">
+              <div class="icon" aria-hidden="true">T</div>
               <div>
                 <div class="label">ข้อความ</div>
                 <div class="hint">เลือกกล่องข้อความบนสไลด์ แล้วปรับ style</div>
               </div>
-            </div>
+            </button>
           </section>
 
           <section>
             <h2>บริบทของสไลด์</h2>
             <button id="refresh" onclick="loadContext()">อ่านบริบทใหม่</button>
-            <div id="ctx">
-              <div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>
+            <div id="ctx" aria-live="polite">
+              <div class="state"><span class="spinner" aria-hidden="true"></span> กำลังอ่านบริบท…</div>
             </div>
           </section>
         </div>
@@ -195,20 +222,20 @@
             <h2>ปรับ style ข้อความ</h2>
 
             <div id="noSelection" class="empty-state">
-              <div class="icon">🖱</div>
+              <div class="icon" aria-hidden="true">🖱</div>
               <div>เลือกกล่องข้อความบนสไลด์ก่อน</div>
             </div>
 
             <div id="editor" class="hidden">
               <span class="selected-badge">✓ กำลังปรับอ็อบเจ็กต์ที่เลือก</span>
 
-              <div class="quick-presets">
-                <div class="chip" onclick="applyQuick('heading')">หัวข้อใหญ่</div>
-                <div class="chip" onclick="applyQuick('subheading')">หัวข้อรอง</div>
-                <div class="chip" onclick="applyQuick('callout')">Callout</div>
-                <div class="chip" onclick="applyQuick('quote')">Quote</div>
-                <div class="chip" onclick="applyQuick('badge')">Badge</div>
-                <div class="chip" onclick="applyQuick('caption')">คำบรรยาย</div>
+              <div class="quick-presets" role="group" aria-label="Preset ข้อความ">
+                <button class="chip" onclick="applyQuick('heading')" aria-label="Apply preset หัวข้อใหญ่">หัวข้อใหญ่</button>
+                <button class="chip" onclick="applyQuick('subheading')" aria-label="Apply preset หัวข้อรอง">หัวข้อรอง</button>
+                <button class="chip" onclick="applyQuick('callout')" aria-label="Apply preset Callout">Callout</button>
+                <button class="chip" onclick="applyQuick('quote')" aria-label="Apply preset Quote">Quote</button>
+                <button class="chip" onclick="applyQuick('badge')" aria-label="Apply preset Badge">Badge</button>
+                <button class="chip" onclick="applyQuick('caption')" aria-label="Apply preset คำบรรยาย">คำบรรยาย</button>
               </div>
 
               <div class="field">
@@ -293,7 +320,11 @@
               </div>
 
               <button class="primary" id="applyBtn" onclick="applyToSelection()">Apply ลงอ็อบเจ็กต์ที่เลือก</button>
-              <div class="status" id="status"></div>
+              <button id="insertBtn" onclick="insertTextBox()" style="margin-top: 8px;">Insert กล่องข้อความใหม่</button>
+              <div class="status" id="status" aria-live="polite"></div>
+              <div class="preview-box" aria-label="ตัวอย่าง style">
+                <div class="preview-text" id="previewText">ตัวอย่าง</div>
+              </div>
             </div>
           </section>
         </div>
@@ -360,6 +391,7 @@
         $('borderWeight').value = style.borderWeight || 1;
         $('borderDash').value = style.borderDash || 'SOLID';
         ['borderColor', 'borderWeight', 'borderDash'].forEach(function (id) { $(id).disabled = !$('hasBorder').checked; });
+        updatePreview();
       }
 
       function readForm() {
@@ -420,13 +452,60 @@
           .applyToSelectedShape(readForm());
       }
 
+      function insertTextBox() {
+        $('insertBtn').disabled = true;
+        setStatus('กำลัง insert…');
+        google.script.run
+          .withSuccessHandler(function (res) {
+            $('insertBtn').disabled = false;
+            if (!res || !res.ok) {
+              setStatus('Insert ไม่สำเร็จ', 'err');
+              return;
+            }
+            setStatus('Insert สำเร็จ', 'ok');
+            loadContext();
+          })
+          .withFailureHandler(function (err) {
+            $('insertBtn').disabled = false;
+            setStatus('Insert ไม่สำเร็จ: ' + (err && err.message ? err.message : err), 'err');
+          })
+          .addTextBox(readForm());
+      }
+
       function applyQuick(name) {
         var base = readForm();
         var style = QUICK_STYLES[name];
         if (!style) return;
         var merged = Object.assign({}, base, style);
         populateForm(merged);
+        updatePreview();
         setStatus('');
+      }
+
+      function updatePreview() {
+        var style = readForm();
+        var el = $('previewText');
+        if (!el) return;
+        var dashMap = { SOLID: 'solid', DASH: 'dashed', DOT: 'dotted', DASH_DOT: 'dashed' };
+        el.textContent = style.text || 'ตัวอย่าง';
+        el.style.fontFamily = style.fontFamily || 'Arial';
+        el.style.fontSize = (style.fontSize || 18) + 'px';
+        el.style.fontWeight = style.bold ? 'bold' : 'normal';
+        el.style.color = style.textColor || '#202124';
+        el.style.textAlign = style.align === 'CENTER' ? 'center' : (style.align === 'END' ? 'right' : 'left');
+        el.style.backgroundColor = style.hasBackground ? (style.backgroundColor || '#fde293') : 'transparent';
+        el.style.padding = style.hasBackground ? '4px 8px' : '0';
+        el.style.borderRadius = style.hasBackground ? '4px' : '0';
+        el.style.border = style.hasBorder ? (style.borderWeight || 1) + 'px ' + (dashMap[style.borderDash] || 'solid') + ' ' + (style.borderColor || '#1a73e8') : 'none';
+      }
+
+      function bindPreview() {
+        ['text', 'fontFamily', 'fontSize', 'bold', 'align', 'textColor', 'backgroundColor', 'hasBackground', 'borderColor', 'borderWeight', 'borderDash', 'hasBorder'].forEach(function (id) {
+          var el = $(id);
+          if (!el) return;
+          var event = (el.type === 'checkbox' || el.tagName === 'SELECT') ? 'change' : 'input';
+          el.addEventListener(event, updatePreview);
+        });
       }
 
       function renderContext(ctx) {
@@ -447,7 +526,7 @@
       }
 
       function loadContext() {
-        $('ctx').innerHTML = '<div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>';
+        $('ctx').innerHTML = '<div class="state"><span class="spinner" aria-hidden="true"></span> กำลังอ่านบริบท…</div>';
         google.script.run
           .withSuccessHandler(renderContext)
           .withFailureHandler(function (err) {
@@ -456,6 +535,7 @@
           .readPresentationContext();
       }
 
+      bindPreview();
       loadContext();
     </script>
   </body>

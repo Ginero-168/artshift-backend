@@ -81,7 +81,10 @@ function callGemini_(prompt) {
   }
 
   var url =
-    GEMINI_API_BASE_ + encodeURIComponent(getModel_()) + ':generateContent';
+    GEMINI_API_BASE_ +
+    encodeURIComponent(getModel_()) +
+    ':generateContent?key=' +
+    encodeURIComponent(apiKey);
 
   var payload = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -91,7 +94,6 @@ function callGemini_(prompt) {
   var response = UrlFetchApp.fetch(url, {
     method: 'post',
     contentType: 'application/json',
-    headers: { 'x-goog-api-key': apiKey },
     payload: JSON.stringify(payload),
     muteHttpExceptions: true
   });

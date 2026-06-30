@@ -158,6 +158,22 @@ function countWords_(text) {
   if (!text) return 0;
   var trimmed = text.trim();
   if (!trimmed) return 0;
+
+  // Try locale-aware word segmentation (Thai, CJK, etc.) when available.
+  if (typeof Intl !== 'undefined' && Intl.Segmenter) {
+    try {
+      var segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+      var count = 0;
+      var iter = segmenter.segment(trimmed);
+      for (var segment of iter) {
+        if (segment.isWordLike) count++;
+      }
+      return count || trimmed.split(/\s+/).length;
+    } catch (e) {
+      // fall through to space-based approximation
+    }
+  }
+
   return trimmed.split(/\s+/).length;
 }
 
