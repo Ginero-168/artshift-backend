@@ -41,17 +41,27 @@ function diagnoseSelection_() {
     if (elements.length === 0) {
       return { shape: null, reason: 'no_selection', detail: 'selection type: ' + selType + ', 0 page elements' };
     }
-    var types = elements.map(function (e) { return e.getPageElementType().toString(); });
+
     var first = elements[0];
-    if (types[0] === 'GROUP') {
-      return { shape: null, reason: 'group_selected', detail: 'group selected' };
+    var firstType = first.getPageElementType().toString();
+
+    // If a group is selected, try to find the first text shape inside it.
+    if (firstType === 'GROUP') {
+      var inner = findFirstTextShapeInGroup_(first.asGroup());
+      if (inner) {
+        return { shape: inner, reason: null, detail: null };
+      }
+      return { shape: null, reason: 'group_selected', detail: 'group selected but no text shape inside' };
     }
-    if (types[0] === 'IMAGE') {
+
+    if (firstType === 'IMAGE') {
       return { shape: null, reason: 'image_selected', detail: 'image selected' };
     }
-    if (types[0] !== 'SHAPE') {
-      return { shape: null, reason: 'unsupported_type', detail: 'selected type: ' + types[0] };
+
+    if (firstType !== 'SHAPE') {
+      return { shape: null, reason: 'unsupported_type', detail: 'selected type: ' + firstType };
     }
+
     return { shape: first.asShape(), reason: null, detail: null };
   }
 
@@ -62,6 +72,31 @@ function diagnoseSelection_() {
   }
 
   return { shape: null, reason: 'no_selection', detail: 'selection type: ' + selType };
+}
+
+/**
+ * Recursively find the first text shape inside a group.
+ * @param {GoogleAppsScript.Slides.Group} group
+ * @return {GoogleAppsScript.Slides.Shape|null}
+ * @private
+ */
+function findFirstTextShapeInGroup_(group) {
+  if (!group) return null;
+  var children = group.getChildren();
+  for (var i = 0; i < children.length; i++) {
+    var child = children[i];
+    var type = child.getPageElementType().toString();
+    if (type === 'SHAPE') {
+      var shape = child.asShape();
+      if (shape.getText && shape.getText().asString().trim().length) {
+        return shape;
+      }
+    } else if (type === 'GROUP') {
+      var found = findFirstTextShapeInGroup_(child.asGroup());
+      if (found) return found;
+    }
+  }
+  return null;
 }
 
 /**
