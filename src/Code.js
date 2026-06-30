@@ -16,6 +16,30 @@ function onHomepage(e) {
 }
 
 /**
+ * Simple trigger: build the Extensions menu when the presentation opens.
+ * This is what lets the user open the floating overlay window.
+ * @param {Object} e
+ */
+function onOpen(e) {
+  SlidesApp.getUi()
+    .createAddonMenu()
+    .addItem('เปิดหน้าต่าง Second Brain', 'showOverlay')
+    .addToUi();
+}
+
+/**
+ * Show the context as a floating (modeless) dialog overlaying the editor.
+ * The user can keep editing slides while it stays open.
+ */
+function showOverlay() {
+  var html = HtmlService.createHtmlOutputFromFile('Overlay')
+    .setWidth(380)
+    .setHeight(560)
+    .setTitle('Slides Second Brain');
+  SlidesApp.getUi().showModelessDialog(html, 'Slides Second Brain');
+}
+
+/**
  * Action: read the active presentation and show the summary card.
  * @param {Object} e
  * @return {GoogleAppsScript.Card_Service.ActionResponse}
