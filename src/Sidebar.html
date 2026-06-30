@@ -20,26 +20,64 @@
         font-size: 13px;
       }
       .wrap { display: flex; flex-direction: column; height: 100%; }
-      header {
-        padding: 12px 16px;
-        border-bottom: 1px solid var(--line);
-      }
+      header { padding: 12px 16px; border-bottom: 1px solid var(--line); }
       header .title { font-weight: 500; font-size: 14px; }
       header .meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
-      .toolbar { padding: 8px 16px; border-bottom: 1px solid var(--line); }
+      main { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
+
+      section { padding: 12px 0; border-bottom: 1px solid var(--line); }
+      section > h2 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        margin: 0 0 10px;
+      }
+
+      label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+      .field { margin-bottom: 10px; }
+      .row { display: flex; gap: 10px; }
+      .row > .field { flex: 1; margin-bottom: 10px; }
+
+      input[type='text'], input[type='number'], select {
+        width: 100%;
+        font: inherit;
+        padding: 6px 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        color: var(--fg);
+      }
+      input[type='color'] {
+        width: 100%;
+        height: 32px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .check { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+      .check input { margin: 0; }
+      .check label { margin: 0; color: var(--fg); font-size: 13px; }
+
       button {
         font: inherit;
         border: 1px solid var(--line);
         background: #fff;
         color: var(--fg);
-        padding: 6px 12px;
+        padding: 8px 12px;
         border-radius: 6px;
         cursor: pointer;
         width: 100%;
       }
       button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
       button:hover { filter: brightness(0.97); }
-      main { flex: 1; overflow-y: auto; padding: 8px 16px 16px; }
+
+      .status { font-size: 12px; margin-top: 8px; min-height: 16px; }
+      .status.ok { color: #188038; }
+      .status.err { color: #c5221f; }
+
       .slide {
         border: 1px solid var(--line);
         border-radius: 8px;
@@ -51,10 +89,10 @@
       .slide .notes { color: var(--muted); margin-top: 6px; font-style: italic; }
       .slide .tags { color: var(--muted); margin-top: 6px; font-size: 11px; }
       .empty { color: var(--muted); }
-      .state { padding: 24px 16px; text-align: center; color: var(--muted); }
-      .err { color: #c5221f; }
+      .state { padding: 16px 0; text-align: center; color: var(--muted); }
+      .state.err { color: #c5221f; }
       .spinner {
-        width: 18px; height: 18px; border: 2px solid var(--line);
+        width: 16px; height: 16px; border: 2px solid var(--line);
         border-top-color: var(--accent); border-radius: 50%;
         display: inline-block; animation: spin 0.8s linear infinite; vertical-align: middle;
       }
@@ -64,18 +102,108 @@
   <body>
     <div class="wrap">
       <header>
-        <div class="title" id="title">Mighty Slide</div>
+        <div class="title">Mighty Slide</div>
         <div class="meta" id="meta"></div>
       </header>
-      <div class="toolbar">
-        <button class="primary" id="refresh" onclick="load()">อ่านบริบทใหม่</button>
-      </div>
-      <main id="main">
-        <div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>
+
+      <main>
+        <!-- ===== Add Text tool ===== -->
+        <section>
+          <h2>เพิ่มข้อความ</h2>
+
+          <div class="field">
+            <label for="text">ข้อความ</label>
+            <input type="text" id="text" value="ข้อความใหม่" />
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="fontFamily">ฟอนต์</label>
+              <select id="fontFamily">
+                <option>Arial</option>
+                <option>Roboto</option>
+                <option>Montserrat</option>
+                <option>Open Sans</option>
+                <option>Lato</option>
+                <option>Times New Roman</option>
+                <option>Georgia</option>
+                <option>Verdana</option>
+                <option>Courier New</option>
+                <option>Sarabun</option>
+              </select>
+            </div>
+            <div class="field" style="max-width: 90px">
+              <label for="fontSize">ขนาด</label>
+              <input type="number" id="fontSize" value="18" min="6" max="400" />
+            </div>
+          </div>
+
+          <div class="check">
+            <input type="checkbox" id="bold" />
+            <label for="bold">ตัวหนา</label>
+          </div>
+
+          <div class="row">
+            <div class="field">
+              <label for="textColor">สีตัวอักษร</label>
+              <input type="color" id="textColor" value="#202124" />
+            </div>
+            <div class="field">
+              <label for="backgroundColor">สีพื้นหลัง</label>
+              <input type="color" id="backgroundColor" value="#fde293" disabled />
+            </div>
+          </div>
+          <div class="check">
+            <input type="checkbox" id="hasBackground" onchange="toggle('hasBackground','backgroundColor')" />
+            <label for="hasBackground">ใส่พื้นหลัง</label>
+          </div>
+
+          <div class="check">
+            <input type="checkbox" id="hasBorder" onchange="toggleBorder()" />
+            <label for="hasBorder">ใส่กรอบ</label>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="borderColor">สีเส้นกรอบ</label>
+              <input type="color" id="borderColor" value="#1a73e8" disabled />
+            </div>
+            <div class="field" style="max-width: 110px">
+              <label for="borderWeight">ความหนา</label>
+              <select id="borderWeight" disabled>
+                <option value="1">บาง (1)</option>
+                <option value="2">กลาง (2)</option>
+                <option value="4">หนา (4)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="borderDash">แบบเส้น</label>
+            <select id="borderDash" disabled>
+              <option value="SOLID">เส้นทึบ</option>
+              <option value="DASH">เส้นประ</option>
+              <option value="DOT">เส้นจุด</option>
+              <option value="DASH_DOT">ประ-จุด</option>
+            </select>
+          </div>
+
+          <button class="primary" id="addBtn" onclick="addText()">เพิ่มข้อความลงสไลด์</button>
+          <div class="status" id="status"></div>
+        </section>
+
+        <!-- ===== Context preview ===== -->
+        <section style="border-bottom: none">
+          <h2>บริบทของสไลด์</h2>
+          <button id="refresh" onclick="loadContext()">อ่านบริบทใหม่</button>
+          <div id="ctx">
+            <div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>
+          </div>
+        </section>
       </main>
     </div>
 
     <script>
+      function $(id) { return document.getElementById(id); }
+
       function esc(s) {
         return String(s == null ? '' : s)
           .replace(/&/g, '&amp;')
@@ -83,17 +211,61 @@
           .replace(/>/g, '&gt;');
       }
 
-      function render(ctx) {
-        document.getElementById('title').textContent = ctx.title || '(ไม่มีชื่อ)';
-        document.getElementById('meta').textContent =
-          ctx.slideCount + ' สไลด์ · ' + ctx.wordCount + ' คำ';
+      function toggle(checkId, targetId) {
+        $(targetId).disabled = !$(checkId).checked;
+      }
 
-        var main = document.getElementById('main');
+      function toggleBorder() {
+        var on = $('hasBorder').checked;
+        ['borderColor', 'borderWeight', 'borderDash'].forEach(function (id) {
+          $(id).disabled = !on;
+        });
+      }
+
+      function setStatus(msg, kind) {
+        var el = $('status');
+        el.textContent = msg || '';
+        el.className = 'status' + (kind ? ' ' + kind : '');
+      }
+
+      function addText() {
+        var opts = {
+          text: $('text').value,
+          fontFamily: $('fontFamily').value,
+          fontSize: Number($('fontSize').value) || 18,
+          bold: $('bold').checked,
+          textColor: $('textColor').value,
+          hasBackground: $('hasBackground').checked,
+          backgroundColor: $('backgroundColor').value,
+          hasBorder: $('hasBorder').checked,
+          borderColor: $('borderColor').value,
+          borderWeight: Number($('borderWeight').value) || 1,
+          borderDash: $('borderDash').value
+        };
+
+        $('addBtn').disabled = true;
+        setStatus('กำลังเพิ่ม…');
+        google.script.run
+          .withSuccessHandler(function () {
+            $('addBtn').disabled = false;
+            setStatus('เพิ่มข้อความลงสไลด์แล้ว', 'ok');
+            loadContext();
+          })
+          .withFailureHandler(function (err) {
+            $('addBtn').disabled = false;
+            setStatus('เพิ่มไม่สำเร็จ: ' + (err && err.message ? err.message : err), 'err');
+          })
+          .addTextBox(opts);
+      }
+
+      function renderContext(ctx) {
+        $('meta').textContent = ctx.slideCount + ' สไลด์ · ' + ctx.wordCount + ' คำ';
+        var box = $('ctx');
         if (!ctx.slides.length) {
-          main.innerHTML = '<div class="state">ไม่มีสไลด์</div>';
+          box.innerHTML = '<div class="state">ไม่มีสไลด์</div>';
           return;
         }
-        main.innerHTML = ctx.slides
+        box.innerHTML = ctx.slides
           .map(function (s) {
             var parts = ['<div class="slide"><h3>สไลด์ ' + s.index + '</h3>'];
             if (s.texts && s.texts.length) {
@@ -101,9 +273,7 @@
             } else {
               parts.push('<div class="empty">(ไม่มีข้อความ)</div>');
             }
-            if (s.notes) {
-              parts.push('<div class="notes">โน้ต: ' + esc(s.notes) + '</div>');
-            }
+            if (s.notes) parts.push('<div class="notes">โน้ต: ' + esc(s.notes) + '</div>');
             var tags = [];
             if (s.layout) tags.push(s.layout);
             if (s.imageCount) tags.push(s.imageCount + ' รูป');
@@ -115,18 +285,19 @@
           .join('');
       }
 
-      function showError(err) {
-        document.getElementById('main').innerHTML =
-          '<div class="state err">อ่านบริบทไม่สำเร็จ: ' + esc(err && err.message ? err.message : err) + '</div>';
+      function loadContext() {
+        $('ctx').innerHTML = '<div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>';
+        google.script.run
+          .withSuccessHandler(renderContext)
+          .withFailureHandler(function (err) {
+            $('ctx').innerHTML =
+              '<div class="state err">อ่านบริบทไม่สำเร็จ: ' +
+              esc(err && err.message ? err.message : err) + '</div>';
+          })
+          .readPresentationContext();
       }
 
-      function load() {
-        document.getElementById('main').innerHTML =
-          '<div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>';
-        google.script.run.withSuccessHandler(render).withFailureHandler(showError).readPresentationContext();
-      }
-
-      load();
+      loadContext();
     </script>
   </body>
 </html>
