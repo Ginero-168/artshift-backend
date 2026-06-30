@@ -415,12 +415,12 @@
       }
 
       function loadSelection() {
-        setStatus('กำลังเช็กการเลือก…');
+        $('noSelection').innerHTML = '<div class="state"><span class="spinner"></span> กำลังเช็กการเลือก…</div>';
         google.script.run
           .withSuccessHandler(function (style) {
             if (!style || !style.selected) {
               setEditorVisible(false);
-              setStatus('');
+              renderNoSelection(style && style.reason ? style.reason : 'no_selection');
               return;
             }
             setEditorVisible(true);
@@ -429,9 +429,22 @@
           })
           .withFailureHandler(function (err) {
             setEditorVisible(false);
-            setStatus('เช็กการเลือกไม่สำเร็จ: ' + (err && err.message ? err.message : err), 'err');
+            renderNoSelection('error', err && err.message ? err.message : err);
           })
           .readSelectedShapeStyle();
+      }
+
+      function renderNoSelection(reason, detail) {
+        var messages = {
+          no_selection: 'ไม่พบอ็อบเจ็กต์ที่เลือก',
+          error: 'เกิดข้อผิดพลาด: ' + (detail || '')
+        };
+        $('noSelection').innerHTML =
+          '<div class="icon" aria-hidden="true">🖱</div>' +
+          '<div><b>ขั้นตอนที่ 1</b> บนสไลด์</div>' +
+          '<div style="font-size: 12px; margin-top: 6px;">คลิกเลือกกล่องข้อความที่ต้องการแก้ไข</div>' +
+          '<div style="font-size: 12px; color: #c5221f; margin-top: 8px;">' + (messages[reason] || messages.no_selection) + '</div>' +
+          '<button class="primary" style="margin-top: 12px;" onclick="loadSelection()">ตรวจสอบอีกครั้ง</button>';
       }
 
       function applyToSelection() {

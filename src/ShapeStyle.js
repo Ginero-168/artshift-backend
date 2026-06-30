@@ -23,8 +23,8 @@ function getSelectedShape_() {
   if (!range) return null;
 
   var elements = range.getPageElements();
-  if (elements.length !== 1) return null;
-
+  if (elements.length === 0) return null;
+  // Accept the first selected element even if multiple are selected.
   var el = elements[0];
   if (el.getPageElementType() !== SlidesApp.PageElementType.SHAPE) return null;
 
@@ -57,7 +57,7 @@ function getSelectedShape_() {
  */
 function readSelectedShapeStyle() {
   var shape = getSelectedShape_();
-  if (!shape) return null;
+  if (!shape) return { selected: false, reason: 'no_selection' };
 
   var textRange = shape.getText();
   var textStyle = textRange.getTextStyle();
@@ -65,7 +65,7 @@ function readSelectedShapeStyle() {
   var fill = shape.getFill();
   var border = shape.getBorder();
 
-  return {
+  var result = {
     selected: true,
     objectId: shape.getObjectId(),
     text: textRange.asString().trim(),
@@ -91,6 +91,10 @@ function readSelectedShapeStyle() {
     left: shape.getLeft(),
     top: shape.getTop()
   };
+
+  // If the shape has no text at all, still allow styling but give a fallback text.
+  if (!result.text) result.text = '';
+  return result;
 }
 
 /**
