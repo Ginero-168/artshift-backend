@@ -73,19 +73,32 @@
         background: #fff;
         transition: border-color 0.15s, box-shadow 0.15s;
         position: relative;
+        height: 110px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
       }
       .preset-card:hover { border-color: var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
       .preset-card .preview {
         pointer-events: none;
-        min-height: 44px;
+        flex: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 6px;
         border-radius: 4px;
         overflow: hidden;
       }
-      .preset-card .label { font-size: 12px; text-align: center; color: var(--muted); }
+      .preset-card .preview span {
+        max-width: 100%;
+        max-height: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+      }
+      .preset-card .label { font-size: 12px; text-align: center; color: var(--muted); margin-top: 6px; }
       .preset-card .delete {
         position: absolute;
         top: 4px; right: 4px;
