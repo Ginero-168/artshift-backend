@@ -7,9 +7,9 @@
       :root {
         --fg: #202124;
         --muted: #5f6368;
-        --line: #e0e0e0;
+        --line: rgba(0, 0, 0, 0.12);
         --accent: #1a73e8;
-        --bg: #ffffff;
+        --panel-alpha: 0.85;
       }
       * { box-sizing: border-box; }
       html, body {
@@ -17,10 +17,19 @@
         height: 100%;
         font-family: 'Google Sans', Roboto, Arial, sans-serif;
         color: var(--fg);
-        background: var(--bg);
+        background: transparent;
         font-size: 13px;
       }
-      .wrap { display: flex; flex-direction: column; height: 100%; }
+      .wrap {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: rgba(255, 255, 255, var(--panel-alpha));
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+      }
+      .opacity { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+      .opacity input[type='range'] { flex: 1; }
       header {
         padding: 12px 16px;
         border-bottom: 1px solid var(--line);
@@ -31,7 +40,13 @@
       }
       header .title { font-weight: 500; font-size: 14px; }
       header .meta { color: var(--muted); font-size: 12px; }
-      .toolbar { padding: 8px 16px; border-bottom: 1px solid var(--line); }
+      .toolbar {
+        padding: 8px 16px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
       button {
         font: inherit;
         border: 1px solid var(--line);
@@ -73,6 +88,11 @@
       </header>
       <div class="toolbar">
         <button class="primary" id="refresh" onclick="load()">อ่านบริบทใหม่</button>
+        <div class="opacity">
+          <span>ความทึบ</span>
+          <input type="range" id="alpha" min="20" max="100" value="85" oninput="setAlpha(this.value)" />
+          <span id="alphaVal">85%</span>
+        </div>
       </div>
       <main id="main">
         <div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>
@@ -124,12 +144,29 @@
           '<div class="state err">อ่านบริบทไม่สำเร็จ: ' + esc(err && err.message ? err.message : err) + '</div>';
       }
 
+      function setAlpha(v) {
+        var a = Math.max(20, Math.min(100, Number(v))) / 100;
+        document.documentElement.style.setProperty('--panel-alpha', a);
+        document.getElementById('alphaVal').textContent = Math.round(a * 100) + '%';
+        try { localStorage.setItem('ssb_alpha', String(v)); } catch (e) {}
+      }
+
+      function restoreAlpha() {
+        var saved;
+        try { saved = localStorage.getItem('ssb_alpha'); } catch (e) {}
+        if (saved) {
+          document.getElementById('alpha').value = saved;
+          setAlpha(saved);
+        }
+      }
+
       function load() {
         document.getElementById('main').innerHTML =
           '<div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>';
         google.script.run.withSuccessHandler(render).withFailureHandler(showError).readPresentationContext();
       }
 
+      restoreAlpha();
       load();
     </script>
   </body>
