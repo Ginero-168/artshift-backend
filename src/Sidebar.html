@@ -207,6 +207,16 @@
                 <div class="label">Text</div>
               </div>
             </div>
+            <div class="tool-btn" style="margin-top: 10px;" onclick="showAnimateForm()">
+              <div class="icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+              </div>
+              <div>
+                <div class="label">Animate Text</div>
+              </div>
+            </div>
           </section>
 
           <section>
@@ -232,6 +242,81 @@
               <button class="link" onclick="showCustomForm()">+ สร้าง preset</button>
             </h2>
             <div class="preset-grid" id="customPresets"></div>
+          </section>
+        </div>
+
+        <!-- ===== Animate text form ===== -->
+        <div id="animateView" class="hidden">
+          <section>
+            <h2>สร้างข้อความเคลื่อนไหว</h2>
+            <div class="field">
+              <label for="aText">ข้อความ</label>
+              <input type="text" id="aText" value="สวัสดี Mighty Slide" />
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="aAnimation">เอฟเฟกต์</label>
+                <select id="aAnimation">
+                  <option value="fade-in">Fade in</option>
+                  <option value="slide-up">Slide up</option>
+                  <option value="slide-left">Slide left</option>
+                  <option value="zoom-in">Zoom in</option>
+                  <option value="bounce">Bounce</option>
+                </select>
+              </div>
+              <div class="field" style="max-width: 90px">
+                <label for="aDuration">วินาที</label>
+                <input type="number" id="aDuration" value="2" min="1" max="5" step="0.5" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="aFont">ฟอนต์</label>
+                <select id="aFont">
+                  <option>Sarabun</option>
+                  <option>Montserrat</option>
+                  <option>Roboto</option>
+                  <option>Arial</option>
+                  <option>Open Sans</option>
+                  <option>Georgia</option>
+                  <option>Courier New</option>
+                </select>
+              </div>
+              <div class="field" style="max-width: 90px">
+                <label for="aFontSize">ขนาด</label>
+                <input type="number" id="aFontSize" value="64" min="12" max="200" />
+              </div>
+            </div>
+            <div class="check">
+              <input type="checkbox" id="aBold" checked />
+              <label for="aBold">ตัวหนา</label>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="aTextColor">สีตัวอักษร</label>
+                <input type="color" id="aTextColor" value="#ffffff" />
+              </div>
+              <div class="field">
+                <label for="aBgColor">สีพื้นหลัง</label>
+                <input type="color" id="aBgColor" value="#1a73e8" />
+              </div>
+            </div>
+            <div class="row">
+              <div class="field">
+                <label for="aWidth">กว้าง (px)</label>
+                <input type="number" id="aWidth" value="640" min="100" max="1200" step="10" />
+              </div>
+              <div class="field">
+                <label for="aHeight">สูง (px)</label>
+                <input type="number" id="aHeight" value="160" min="40" max="600" step="10" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="aBackend">Backend URL</label>
+              <input type="text" id="aBackend" placeholder="https://yourdomain.com/api/animate" />
+            </div>
+            <div class="status" id="aStatus"></div>
+            <button class="primary" id="aSubmit" onclick="animateText()">สร้าง GIF แล้วแทรกลงสไลด์</button>
           </section>
         </div>
 
@@ -357,7 +442,7 @@
       function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
       function showView(id) {
-        ['mainView', 'textView', 'customFormView'].forEach(function (v) { $(v).classList.add('hidden'); });
+        ['mainView', 'textView', 'customFormView', 'animateView'].forEach(function (v) { $(v).classList.add('hidden'); });
         $(id).classList.remove('hidden');
       }
 
@@ -379,11 +464,19 @@
         $('pageTitle').textContent = 'สร้าง preset';
       }
 
+      function showAnimateForm() {
+        showView('animateView');
+        $('backBtn').style.display = 'inline';
+        $('pageTitle').textContent = 'Animate Text';
+      }
+
       function goBack() {
-        if ($('customFormView').classList.contains('hidden')) {
+        if (!$('customFormView').classList.contains('hidden')) {
+          showTextPresets();
+        } else if (!$('animateView').classList.contains('hidden')) {
           showMain();
         } else {
-          showTextPresets();
+          showMain();
         }
       }
 
@@ -488,6 +581,46 @@
             alert('บันทึกไม่สำเร็จ: ' + (err && err.message ? err.message : err));
           })
           .saveCustomPreset(preset);
+      }
+
+      function setAnimateStatus(msg, kind) {
+        var el = $('aStatus');
+        el.textContent = msg || '';
+        el.className = 'status' + (kind ? ' ' + kind : '');
+      }
+
+      function animateText() {
+        var backend = $('aBackend').value.trim();
+        if (!backend) {
+          setAnimateStatus('กรุณาใส่ Backend URL ก่อน', 'err');
+          return;
+        }
+        var opts = {
+          text: $('aText').value || 'สวัสดี',
+          animation: $('aAnimation').value,
+          duration: Number($('aDuration').value) || 2,
+          fontFamily: $('aFont').value + ', sans-serif',
+          fontSize: Number($('aFontSize').value) || 64,
+          bold: $('aBold').checked,
+          textColor: $('aTextColor').value,
+          backgroundColor: $('aBgColor').value,
+          width: Number($('aWidth').value) || 640,
+          height: Number($('aHeight').value) || 160,
+          backendUrl: backend
+        };
+        $('aSubmit').disabled = true;
+        setAnimateStatus('กำลังสร้าง GIF ที่ backend… อาจใช้เวลา 5-15 วินาที');
+        google.script.run
+          .withSuccessHandler(function (res) {
+            $('aSubmit').disabled = false;
+            setAnimateStatus('แทรก GIF ลงสไลด์แล้ว', 'ok');
+            loadContext();
+          })
+          .withFailureHandler(function (err) {
+            $('aSubmit').disabled = false;
+            setAnimateStatus('ไม่สำเร็จ: ' + (err && err.message ? err.message : err), 'err');
+          })
+          .animateTextToSlide(opts);
       }
 
       function deleteCustom(i) {
