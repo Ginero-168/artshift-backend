@@ -77,10 +77,10 @@ function readSelectedShapeStyle() {
       return a ? a.toString() : null;
     }),
     textColor: colorToHex_(safe_(function () { return textStyle.getForegroundColor(); })),
-    hasBackground: fill.getFillType() === SlidesApp.FillType.SOLID,
-    backgroundColor: colorToHex_(safe_(function () { return fill.getSolidFill(); })),
-    hasBorder: border.getLineFill().getFillType() === SlidesApp.FillType.SOLID,
-    borderColor: colorToHex_(safe_(function () { return border.getLineFill().getSolidFill(); })),
+    hasBackground: safe_(function () { return fill.getType(); }) === SlidesApp.FillType.SOLID,
+    backgroundColor: colorToHex_(safe_(function () { return fill.getSolidFill() && fill.getSolidFill().getColor(); })),
+    hasBorder: safe_(function () { return border.getLineFill().getType(); }) === SlidesApp.FillType.SOLID,
+    borderColor: colorToHex_(safe_(function () { return border.getLineFill().getSolidFill() && border.getLineFill().getSolidFill().getColor(); })),
     borderWeight: safe_(function () { return border.getWeight(); }),
     borderDash: safe_(function () {
       var d = border.getDashStyle();
