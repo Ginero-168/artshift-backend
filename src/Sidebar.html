@@ -523,7 +523,23 @@
           '<div style="font-size: 12px; margin-top: 6px;">คลิกเลือกกล่องข้อความที่ต้องการแก้ไข</div>' +
           '<div style="font-size: 12px; color: #c5221f; margin-top: 8px;">' + (messages[reason] || messages.no_selection) + '</div>' +
           detailLine +
-          '<button class="primary" style="margin-top: 12px;" onclick="loadSelection()">ตรวจสอบอีกครั้ง</button>';
+          '<button class="primary" style="margin-top: 12px;" onclick="loadSelection()">ตรวจสอบอีกครั้ง</button>' +
+          '<button style="margin-top: 8px;" onclick="showDebug()">แสดงข้อมูลการเลือก (debug)</button>' +
+          '<pre id="debugOutput" style="font-size: 10px; text-align: left; background: #f8f9fa; padding: 8px; border-radius: 6px; margin-top: 8px; display: none; white-space: pre-wrap; word-break: break-all;"></pre>';
+      }
+
+      function showDebug() {
+        var out = $('debugOutput');
+        out.style.display = 'block';
+        out.textContent = 'กำลังเช็ก…';
+        google.script.run
+          .withSuccessHandler(function (info) {
+            out.textContent = JSON.stringify(info, null, 2);
+          })
+          .withFailureHandler(function (err) {
+            out.textContent = 'ERROR: ' + (err && err.message ? err.message : err);
+          })
+          .getSelectionDebug();
       }
 
       function applyToSelection() {

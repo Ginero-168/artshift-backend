@@ -20,6 +20,71 @@ function getSelectedShape_() {
 }
 
 /**
+ * Return a raw diagnostic dump of the current selection for UI debugging.
+ * @return {Object}
+ */
+function getSelectionDebug() {
+  var presentation = SlidesApp.getActivePresentation();
+  var selection = presentation.getSelection();
+  if (!selection) {
+    return { hasSelection: false, selectionType: null, message: 'no selection object' };
+  }
+
+  var selType = safe_(function () { return selection.getSelectionType().toString(); });
+  var range = selection.getPageElementRange();
+  var textRange = selection.getTextRange();
+
+  var pageElements = [];
+  if (range) {
+    pageElements = range.getPageElements().map(function (e) {
+      var type = e.getPageElementType().toString();
+      var info = { type: type, objectId: e.getObjectId() };
+      if (type === 'SHAPE') {
+        var shape = e.asShape();
+        info.hasText = !!(shape.getText && shape.getText().asString());
+        info.textPreview = shape.getText().asString().substring(0, 30);
+      }
+      if (type === 'GROUP') {
+        info.children = describeGroup_(e.asGroup());
+      }
+      return info;
+    });
+  }
+
+  var diag = diagnoseSelection_();
+  return {
+    hasSelection: true,
+    selectionType: selType,
+    pageElementCount: pageElements.length,
+    pageElements: pageElements,
+    textRangeExists: !!textRange,
+    resolved: !!diag.shape,
+    reason: diag.reason,
+    detail: diag.detail
+  };
+}
+
+/**
+ * @param {GoogleAppsScript.Slides.Group} group
+ * @return {Array<Object>}
+ * @private
+ */
+function describeGroup_(group) {
+  if (!group) return [];
+  return group.getChildren().map(function (c) {
+    var type = c.getPageElementType().toString();
+    var info = { type: type, objectId: c.getObjectId() };
+    if (type === 'SHAPE') {
+      var shape = c.asShape();
+      info.textPreview = shape.getText().asString().substring(0, 30);
+    } else if (type === 'GROUP') {
+      info.children = describeGroup_(c.asGroup());
+    }
+    return info;
+  });
+}
+
+/**
  * Inspect the current selection and return diagnostic info plus the first
  * usable shape if found.
  * @return {{shape: (GoogleAppsScript.Slides.Shape|null), reason: (string|null), detail: (string|null)}}
