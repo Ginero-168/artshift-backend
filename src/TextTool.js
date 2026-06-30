@@ -36,8 +36,17 @@ function addTextBox(opts) {
   var text =
     opts.text != null && String(opts.text).length ? String(opts.text) : 'ข้อความใหม่';
 
-  // Default position/size in points (roughly upper-left of the slide).
-  var shape = slide.insertTextBox(text, 50, 50, 320, 60);
+  var width = Number(opts.width) || 320;
+  var height = Number(opts.height) || 60;
+  var position = opts.position || 'upper-left';
+  var coords = resolvePosition_(slide, position, width, height);
+  var shape = slide.insertTextBox(text, coords.x, coords.y, width, height);
+
+  var paragraphStyle = shape.getText().getParagraphStyle();
+  if (opts.align) {
+    var alignment = resolveAlignment_(opts.align);
+    if (alignment) paragraphStyle.setParagraphAlignment(alignment);
+  }
 
   var style = shape.getText().getTextStyle();
   if (opts.fontFamily) style.setFontFamily(opts.fontFamily);
@@ -45,14 +54,12 @@ function addTextBox(opts) {
   if (opts.bold) style.setBold(true);
   if (opts.textColor) style.setForegroundColor(opts.textColor);
 
-  // Shape fill (background). Text boxes default to no fill.
   if (opts.hasBackground && opts.backgroundColor) {
     shape.getFill().setSolidFill(opts.backgroundColor);
   } else {
     shape.getFill().setTransparent();
   }
 
-  // Border.
   var border = shape.getBorder();
   if (opts.hasBorder) {
     if (opts.borderColor) border.getLineFill().setSolidFill(opts.borderColor);
@@ -76,6 +83,46 @@ function resolveDashStyle_(key) {
   if (!key) return null;
   var styles = SlidesApp.DashStyle;
   return styles[key] || null;
+}
+
+/**
+ * Map a horizontal alignment key to the SlidesApp.ParagraphAlignment enum.
+ * @param {string} key
+ * @return {GoogleAppsScript.Slides.ParagraphAlignment|null}
+ * @private
+ */
+function resolveAlignment_(key) {
+  if (!key) return null;
+  var alignments = SlidesApp.ParagraphAlignment;
+  return alignments[key] || null;
+}
+
+/**
+ * Compute insertion coordinates for a shape on the slide based on the chosen
+ * position preset and the slide page size.
+ * @param {GoogleAppsScript.Slides.Slide} slide
+ * @param {string} position upper-left | center | upper-center | lower-left
+ * @param {number} width
+ * @param {number} height
+ * @return {{x: number, y: number}}
+ * @private
+ */
+function resolvePosition_(slide, position, width, height) {
+  var pageSize = slide.getPageSize();
+  var cw = pageSize.getWidth();
+  var ch = pageSize.getHeight();
+  var margin = 50;
+  switch (position) {
+    case 'center':
+      return { x: (cw - width) / 2, y: (ch - height) / 2 };
+    case 'upper-center':
+      return { x: (cw - width) / 2, y: margin };
+    case 'lower-left':
+      return { x: margin, y: ch - height - margin };
+    case 'upper-left':
+    default:
+      return { x: margin, y: margin };
+  }
 }
 
 /**
