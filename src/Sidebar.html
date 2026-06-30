@@ -437,13 +437,19 @@
       function renderNoSelection(reason, detail) {
         var messages = {
           no_selection: 'ไม่พบอ็อบเจ็กต์ที่เลือก',
+          text_cursor: 'คุณกำลังอยู่ในโหมดแก้ไขข้อความ — ให้คลิกที่เส้นขอบกล่องข้อความ (ไม่ใช่ตัวอักษร)',
+          group_selected: 'คุณเลือกกลุ่ม (group) — ให้คลิกเลือกกล่องข้อความภายในกลุ่มหรือ ungroup ก่อน',
+          image_selected: 'คุณเลือกรูปภาพ — ระบบรองรับเฉพาะกล่องข้อความ',
+          unsupported_type: 'อ็อบเจ็กต์ที่เลือกไม่รองรับ',
           error: 'เกิดข้อผิดพลาด: ' + (detail || '')
         };
+        var detailLine = detail ? '<div style="font-size: 11px; color: #888; margin-top: 4px;">' + esc(detail) + '</div>' : '';
         $('noSelection').innerHTML =
           '<div class="icon" aria-hidden="true">🖱</div>' +
           '<div><b>ขั้นตอนที่ 1</b> บนสไลด์</div>' +
           '<div style="font-size: 12px; margin-top: 6px;">คลิกเลือกกล่องข้อความที่ต้องการแก้ไข</div>' +
           '<div style="font-size: 12px; color: #c5221f; margin-top: 8px;">' + (messages[reason] || messages.no_selection) + '</div>' +
+          detailLine +
           '<button class="primary" style="margin-top: 12px;" onclick="loadSelection()">ตรวจสอบอีกครั้ง</button>';
       }
 

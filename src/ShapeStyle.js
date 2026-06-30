@@ -15,20 +15,53 @@
  * @private
  */
 function getSelectedShape_() {
+  var diag = diagnoseSelection_();
+  return diag.shape || null;
+}
+
+/**
+ * Inspect the current selection and return diagnostic info plus the first
+ * usable shape if found.
+ * @return {{shape: (GoogleAppsScript.Slides.Shape|null), reason: (string|null), detail: (string|null)}}
+ * @private
+ */
+function diagnoseSelection_() {
   var presentation = SlidesApp.getActivePresentation();
   var selection = presentation.getSelection();
-  if (!selection) return null;
+  if (!selection) {
+    return { shape: null, reason: 'no_selection', detail: 'selection object is null' };
+  }
 
+  var selType = safe_(function () { return selection.getSelectionType().toString(); });
   var range = selection.getPageElementRange();
-  if (!range) return null;
+  var textRange = selection.getTextRange();
 
-  var elements = range.getPageElements();
-  if (elements.length === 0) return null;
-  // Accept the first selected element even if multiple are selected.
-  var el = elements[0];
-  if (el.getPageElementType() !== SlidesApp.PageElementType.SHAPE) return null;
+  if (range) {
+    var elements = range.getPageElements();
+    if (elements.length === 0) {
+      return { shape: null, reason: 'no_selection', detail: 'selection type: ' + selType + ', 0 page elements' };
+    }
+    var types = elements.map(function (e) { return e.getPageElementType().toString(); });
+    var first = elements[0];
+    if (types[0] === 'GROUP') {
+      return { shape: null, reason: 'group_selected', detail: 'group selected' };
+    }
+    if (types[0] === 'IMAGE') {
+      return { shape: null, reason: 'image_selected', detail: 'image selected' };
+    }
+    if (types[0] !== 'SHAPE') {
+      return { shape: null, reason: 'unsupported_type', detail: 'selected type: ' + types[0] };
+    }
+    return { shape: first.asShape(), reason: null, detail: null };
+  }
 
-  return el.asShape();
+  if (textRange) {
+    // Cursor is inside a text box. We cannot get the parent shape directly
+    // from a TextRange, so tell the user to select the border instead.
+    return { shape: null, reason: 'text_cursor', detail: 'select the text box border, not the cursor inside text' };
+  }
+
+  return { shape: null, reason: 'no_selection', detail: 'selection type: ' + selType };
 }
 
 /**
@@ -56,7 +89,11 @@ function getSelectedShape_() {
  * }|null)}
  */
 function readSelectedShapeStyle() {
-  var shape = getSelectedShape_();
+  var diag = diagnoseSelection_();
+  if (diag.reason) {
+    return { selected: false, reason: diag.reason, detail: diag.detail };
+  }
+  var shape = diag.shape;
   if (!shape) return { selected: false, reason: 'no_selection' };
 
   var textRange = shape.getText();
