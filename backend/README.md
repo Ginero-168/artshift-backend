@@ -1,8 +1,11 @@
 # Mighty Slide Animator Backend
 
-Node.js service that renders animated text (HTML/CSS) into a GIF and returns
-it as a base64 data URL, so the Mighty Slide Google Slides add-on can insert
-it as an image.
+Node.js service that renders animated text into a GIF using `node-canvas` and
+`gifencoder`, then returns it as a base64 data URL. The Mighty Slide Google
+Slides add-on can insert the GIF as an image on a slide.
+
+No headless browser is required, so this backend runs on any Node.js host that
+supports native `canvas` dependencies (including Hostinger Node.js hosting).
 
 ## API
 
@@ -56,34 +59,25 @@ npm start
 
 The server listens on `http://0.0.0.0:3000` by default.
 
+> Note: `canvas` is a native Node.js module. On macOS/Linux you may need
+> build tools and system libraries (e.g. `pkg-config`, `cairo`, `pango`,
+> `libjpeg`, `giflib`). See the
+> [`canvas` install guide](https://github.com/Automattic/node-canvas#compiling).
+
 ## Deploy on Hostinger
 
-### If you have Hostinger VPS
+This backend has been deployed successfully on Hostinger Node.js application
+hosting using the archive deployment method.
 
-1. SSH into the VPS and install Node.js 18+ and dependencies for Puppeteer:
-
+1. Zip the `backend/` folder (without `node_modules`):
    ```bash
-   sudo apt update
-   sudo apt install -y libgconf-2-4 libatk1.0-0 libatk-bridge2.0-0 libgdk-pixbuf2.0-0 libgtk-3-0 libgbm1 libnss3 libxss1 libasound2
+   cd backend
+   zip -r ../backend.zip . -x "node_modules/*"
    ```
-
-2. Upload this `backend/` folder to the VPS.
-3. Run `npm install` and `npm start` (or use PM2 for production).
-4. Expose the server through your domain with a reverse proxy (Nginx) or use
-   the VPS IP with port 3000 if you open the firewall.
-5. Copy the public URL into the add-on's `AnimateText.js` config variable
-   `BACKEND_URL`.
-
-### If you only have Hostinger shared hosting
-
-Shared hosting usually **cannot run Puppeteer/headless Chrome** because it
-lacks the required libraries and sandbox permissions. You need at least a VPS
-or a cloud function (e.g. Vercel Serverless Functions may also struggle with
-Puppeteer). Alternatives:
-
-- Upgrade to Hostinger VPS
-- Use a different cloud provider that supports Docker (Render, Railway, Fly.io)
-- Use a dedicated GIF-rendering API service
+2. In Hostinger hPanel, go to **Advanced** → **Node.js** / **JavaScript Apps**
+   and upload the archive.
+3. Hostinger will detect the Express app and run `npm install` + `npm start`.
+4. Set the deployed URL in the add-on (`src/AnimateText.js`).
 
 ## Environment variables
 

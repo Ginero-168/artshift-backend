@@ -8,8 +8,8 @@
  * height, duration } and receive { ok: true, data: base64, mime: 'image/gif' }.
  */
 
-// TODO: replace with your deployed backend URL before publishing.
-var ANIMATE_BACKEND_URL_ = 'http://localhost:3000/api/animate';
+// Default backend for the Mighty Slide animator. Override via the UI if needed.
+var ANIMATE_BACKEND_URL_ = 'https://artshift-backend.kirita.me/api/animate';
 
 /**
  * Render animated text via the backend and insert the resulting GIF into the
