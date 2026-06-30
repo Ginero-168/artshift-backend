@@ -23,7 +23,7 @@ function onInstall(e) {
 function onOpen(e) {
   SlidesApp.getUi()
     .createAddonMenu()
-    .addItem('เปิดแผง Second Brain', 'showPanel')
+    .addItem('เปิดแผง Mighty Slide', 'showPanel')
     .addToUi();
 }
 
@@ -33,7 +33,7 @@ function onOpen(e) {
  */
 function showPanel() {
   var html = HtmlService.createHtmlOutputFromFile('Sidebar').setTitle(
-    'Slides Second Brain'
+    'Mighty Slide'
   );
   SlidesApp.getUi().showSidebar(html);
 }

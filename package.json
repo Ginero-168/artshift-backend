@@ -5,7 +5,7 @@
   "description": "Google Slides Workspace Add-on that reads presentation context (phase 1), with a roadmap toward Gemini-powered summarization and vibe search.",
   "scripts": {
     "login": "clasp login",
-    "create": "clasp create --type slides --title \"Slides Second Brain\" --rootDir ./src",
+    "create": "clasp create --type standalone --title \"Mighty Slide\" --rootDir ./src",
     "push": "clasp push",
     "pull": "clasp pull",
     "watch": "clasp push --watch",

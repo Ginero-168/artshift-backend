@@ -11,7 +11,7 @@
  */
 function buildHomepageCard() {
   var header = CardService.newCardHeader()
-    .setTitle('Slides Second Brain')
+    .setTitle('Mighty Slide')
     .setSubtitle('Phase 1 · อ่านบริบทของ presentation');
 
   var intro = CardService.newTextParagraph()
