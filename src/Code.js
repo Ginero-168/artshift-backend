@@ -36,7 +36,82 @@ function handleReadContext(e) {
  * @return {GoogleAppsScript.Card_Service.ActionResponse}
  */
 function handleGoHome(e) {
-  var nav = CardService.newNavigation().updateCard(buildHomepageCard());
+  return navTo_(buildHomepageCard());
+}
+
+/* ----------------------------- AI (phase 2) ----------------------------- */
+
+/** Show the settings card. */
+function handleShowSettings(e) {
+  return navTo_(buildSettingsCard());
+}
+
+/** Persist API key + model from the settings form. */
+function handleSaveSettings(e) {
+  var inputs = (e && e.commonEventObject && e.commonEventObject.formInputs) || {};
+  setApiKey_(readInput_(inputs, 'apiKey'));
+  setModel_(readInput_(inputs, 'model'));
+  return CardService.newActionResponseBuilder()
+    .setNotification(CardService.newNotification().setText('บันทึกการตั้งค่าแล้ว'))
+    .setNavigation(CardService.newNavigation().updateCard(buildHomepageCard()))
+    .build();
+}
+
+/** Remove the stored API key. */
+function handleClearKey(e) {
+  setApiKey_('');
+  return CardService.newActionResponseBuilder()
+    .setNotification(CardService.newNotification().setText('ลบ API key แล้ว'))
+    .setNavigation(CardService.newNavigation().updateCard(buildSettingsCard()))
+    .build();
+}
+
+/** Summarize the active presentation with Gemini. */
+function handleSummarize(e) {
+  try {
+    return navTo_(buildAiResultCard('สรุป deck', summarizePresentation()));
+  } catch (err) {
+    return notify_('สรุปไม่สำเร็จ: ' + err.message);
+  }
+}
+
+/** Show the Q&A input card. */
+function handleShowAsk(e) {
+  return navTo_(buildAskCard());
+}
+
+/** Answer a question about the deck. */
+function handleAsk(e) {
+  try {
+    var inputs = (e && e.commonEventObject && e.commonEventObject.formInputs) || {};
+    var question = readInput_(inputs, 'question');
+    return navTo_(buildAiResultCard('คำตอบ', answerQuestion(question)));
+  } catch (err) {
+    return notify_('ถามไม่สำเร็จ: ' + err.message);
+  }
+}
+
+/**
+ * Read a single text value from a CardService form inputs map.
+ * @param {Object} formInputs
+ * @param {string} field
+ * @return {string}
+ * @private
+ */
+function readInput_(formInputs, field) {
+  var entry = formInputs[field];
+  if (!entry || !entry.stringInputs || !entry.stringInputs.value) return '';
+  return entry.stringInputs.value[0] || '';
+}
+
+/**
+ * Build an ActionResponse that navigates (updates) to a card.
+ * @param {GoogleAppsScript.Card_Service.Card} card
+ * @return {GoogleAppsScript.Card_Service.ActionResponse}
+ * @private
+ */
+function navTo_(card) {
+  var nav = CardService.newNavigation().updateCard(card);
   return CardService.newActionResponseBuilder().setNavigation(nav).build();
 }
 

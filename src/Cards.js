@@ -20,20 +20,140 @@ function buildHomepageCard() {
       '(หัวข้อ, ข้อความ, โน้ตผู้บรรยาย, จำนวนรูป/ตาราง).'
     );
 
-  var readAction = CardService.newAction().setFunctionName('handleReadContext');
   var readButton = CardService.newTextButton()
     .setText('อ่านบริบท')
     .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
-    .setOnClickAction(readAction);
+    .setOnClickAction(CardService.newAction().setFunctionName('handleReadContext'));
 
   var section = CardService.newCardSection()
     .addWidget(intro)
     .addWidget(CardService.newButtonSet().addButton(readButton));
 
+  // AI section (phase 2) — only useful once an API key is configured.
+  var aiSection = CardService.newCardSection().setHeader('AI (Gemini)');
+  if (hasApiKey_()) {
+    var summarizeButton = CardService.newTextButton()
+      .setText('สรุป deck')
+      .setOnClickAction(CardService.newAction().setFunctionName('handleSummarize'));
+    var askButton = CardService.newTextButton()
+      .setText('ถาม-ตอบ')
+      .setOnClickAction(CardService.newAction().setFunctionName('handleShowAsk'));
+    aiSection.addWidget(
+      CardService.newButtonSet().addButton(summarizeButton).addButton(askButton)
+    );
+  } else {
+    aiSection.addWidget(
+      CardService.newTextParagraph().setText(
+        '<font color="#888888">ตั้งค่า Gemini API key ก่อนเพื่อใช้ฟีเจอร์ AI</font>'
+      )
+    );
+  }
+
+  var settingsButton = CardService.newTextButton()
+    .setText('ตั้งค่า')
+    .setOnClickAction(CardService.newAction().setFunctionName('handleShowSettings'));
+  var settingsSection = CardService.newCardSection().addWidget(
+    CardService.newButtonSet().addButton(settingsButton)
+  );
+
   return CardService.newCardBuilder()
     .setHeader(header)
     .addSection(section)
+    .addSection(aiSection)
+    .addSection(settingsSection)
     .build();
+}
+
+/**
+ * Settings card: configure the Gemini API key and model.
+ * @return {GoogleAppsScript.Card_Service.Card}
+ */
+function buildSettingsCard() {
+  var header = CardService.newCardHeader()
+    .setTitle('ตั้งค่า')
+    .setSubtitle('Gemini API');
+
+  var keyInput = CardService.newTextInput()
+    .setFieldName('apiKey')
+    .setTitle('Gemini API key')
+    .setHint(hasApiKey_() ? 'ตั้งค่าไว้แล้ว — กรอกใหม่เพื่อแทนที่' : 'วาง API key ที่นี่');
+
+  var modelInput = CardService.newTextInput()
+    .setFieldName('model')
+    .setTitle('Model')
+    .setValue(getModel_());
+
+  var saveButton = CardService.newTextButton()
+    .setText('บันทึก')
+    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+    .setOnClickAction(CardService.newAction().setFunctionName('handleSaveSettings'));
+  var clearButton = CardService.newTextButton()
+    .setText('ลบ key')
+    .setOnClickAction(CardService.newAction().setFunctionName('handleClearKey'));
+  var back = CardService.newTextButton()
+    .setText('กลับ')
+    .setOnClickAction(CardService.newAction().setFunctionName('handleGoHome'));
+
+  var section = CardService.newCardSection()
+    .addWidget(keyInput)
+    .addWidget(modelInput)
+    .addWidget(
+      CardService.newButtonSet()
+        .addButton(saveButton)
+        .addButton(clearButton)
+        .addButton(back)
+    );
+
+  return CardService.newCardBuilder().setHeader(header).addSection(section).build();
+}
+
+/**
+ * Card with a question field for Q&A over the deck.
+ * @return {GoogleAppsScript.Card_Service.Card}
+ */
+function buildAskCard() {
+  var header = CardService.newCardHeader().setTitle('ถาม-ตอบเกี่ยวกับ deck');
+  var input = CardService.newTextInput()
+    .setFieldName('question')
+    .setTitle('คำถาม')
+    .setMultiline(true)
+    .setHint('เช่น: deck นี้กลุ่มเป้าหมายคือใคร?');
+
+  var askButton = CardService.newTextButton()
+    .setText('ถาม')
+    .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+    .setOnClickAction(CardService.newAction().setFunctionName('handleAsk'));
+  var back = CardService.newTextButton()
+    .setText('กลับ')
+    .setOnClickAction(CardService.newAction().setFunctionName('handleGoHome'));
+
+  var section = CardService.newCardSection()
+    .addWidget(input)
+    .addWidget(CardService.newButtonSet().addButton(askButton).addButton(back));
+
+  return CardService.newCardBuilder().setHeader(header).addSection(section).build();
+}
+
+/**
+ * Render an AI text result.
+ * @param {string} title
+ * @param {string} text
+ * @return {GoogleAppsScript.Card_Service.Card}
+ */
+function buildAiResultCard(title, text) {
+  var header = CardService.newCardHeader().setTitle(title);
+  var body = CardService.newTextParagraph().setText(
+    escapeHtml_(text).replace(/\n/g, '<br>')
+  );
+  var back = CardService.newTextButton()
+    .setText('กลับ')
+    .setOnClickAction(CardService.newAction().setFunctionName('handleGoHome'));
+
+  var section = CardService.newCardSection()
+    .addWidget(body)
+    .addWidget(CardService.newButtonSet().addButton(back));
+
+  return CardService.newCardBuilder().setHeader(header).addSection(section).build();
 }
 
 /**
