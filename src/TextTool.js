@@ -109,9 +109,8 @@ function resolveAlignment_(key) {
  */
 function resolvePosition_(slide, position, width, height) {
   var presentation = SlidesApp.getActivePresentation();
-  var pageSize = presentation.getPageSize();
-  var cw = pageSize.getWidth();
-  var ch = pageSize.getHeight();
+  var cw = presentation.getPageWidth();
+  var ch = presentation.getPageHeight();
   var margin = 50;
   switch (position) {
     case 'center':
