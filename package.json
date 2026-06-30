@@ -1,0 +1,18 @@
+{
+  "name": "gg-slide-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Google Slides Workspace Add-on that reads presentation context (phase 1), with a roadmap toward Gemini-powered summarization and vibe search.",
+  "scripts": {
+    "login": "clasp login",
+    "create": "clasp create --type slides --title \"Slides Second Brain\" --rootDir ./src",
+    "push": "clasp push",
+    "pull": "clasp pull",
+    "watch": "clasp push --watch",
+    "open": "clasp open",
+    "deploy": "clasp deploy"
+  },
+  "devDependencies": {
+    "@google/clasp": "2.4.2"
+  }
+}
