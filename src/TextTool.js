@@ -108,7 +108,8 @@ function resolveAlignment_(key) {
  * @private
  */
 function resolvePosition_(slide, position, width, height) {
-  var pageSize = slide.getPageSize();
+  var presentation = SlidesApp.getActivePresentation();
+  var pageSize = presentation.getPageSize();
   var cw = pageSize.getWidth();
   var ch = pageSize.getHeight();
   var margin = 50;

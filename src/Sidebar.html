@@ -21,8 +21,9 @@
         font-size: 13px;
       }
       .wrap { display: flex; flex-direction: column; height: 100%; }
-      header { padding: 12px 16px; border-bottom: 1px solid var(--line); }
-      header .title { font-weight: 500; font-size: 14px; }
+      header { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+      header .title { font-weight: 500; font-size: 14px; flex: 1; }
+      header .back { color: var(--accent); cursor: pointer; font-size: 13px; display: none; }
       header .meta { color: var(--muted); font-size: 12px; margin-top: 2px; }
       main { flex: 1; overflow-y: auto; padding: 0 16px 16px; }
 
@@ -36,7 +37,26 @@
       }
       section:last-child { border-bottom: none; }
 
-      /* Preset cards */
+      .tool-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        cursor: pointer;
+        transition: border-color 0.15s, box-shadow 0.15s;
+      }
+      .tool-btn:hover { border-color: var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+      .tool-btn .icon {
+        width: 28px; height: 28px; border-radius: 6px; background: var(--surface);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; color: var(--accent);
+      }
+      .tool-btn .label { font-weight: 500; font-size: 13px; }
+      .tool-btn .hint { color: var(--muted); font-size: 11px; margin-top: 2px; }
+
       .preset-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -48,15 +68,12 @@
         padding: 10px 12px;
         cursor: pointer;
         background: #fff;
-        transition: box-shadow 0.15s, border-color 0.15s;
+        transition: border-color 0.15s, box-shadow 0.15s;
       }
-      .preset-card:hover {
-        border-color: var(--accent);
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-      }
+      .preset-card:hover { border-color: var(--accent); box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
       .preset-card .preview {
         pointer-events: none;
-        min-height: 40px;
+        min-height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -64,76 +81,11 @@
         border-radius: 4px;
         overflow: hidden;
       }
-      .preset-card .label {
-        font-size: 12px;
-        text-align: center;
-        color: var(--muted);
-      }
+      .preset-card .label { font-size: 12px; text-align: center; color: var(--muted); }
 
-      label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
-      .field { margin-bottom: 10px; }
-      .row { display: flex; gap: 10px; }
-      .row > .field { flex: 1; margin-bottom: 10px; }
-
-      input[type='text'], input[type='number'], select {
-        width: 100%;
-        font: inherit;
-        padding: 6px 8px;
-        border: 1px solid var(--line);
-        border-radius: 6px;
-        background: #fff;
-        color: var(--fg);
-      }
-      input[type='color'] {
-        width: 100%;
-        height: 32px;
-        padding: 0;
-        border: 1px solid var(--line);
-        border-radius: 6px;
-        background: #fff;
-        cursor: pointer;
-      }
-      .check { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-      .check input { margin: 0; }
-      .check label { margin: 0; color: var(--fg); font-size: 13px; }
-
-      button {
-        font: inherit;
-        border: 1px solid var(--line);
-        background: #fff;
-        color: var(--fg);
-        padding: 8px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        width: 100%;
-      }
-      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-      button:hover { filter: brightness(0.97); }
-      button:disabled { opacity: 0.6; cursor: not-allowed; }
-
-      .status { font-size: 12px; margin-top: 8px; min-height: 16px; }
+      .status { font-size: 12px; margin-top: 10px; min-height: 16px; }
       .status.ok { color: #188038; }
       .status.err { color: #c5221f; }
-
-      /* Live preview */
-      .live-preview {
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 16px;
-        min-height: 60px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 10px;
-        background: #fff;
-        overflow: hidden;
-      }
-      .live-preview .box {
-        display: inline-block;
-        padding: 6px 10px;
-        max-width: 100%;
-        word-break: break-word;
-      }
 
       .slide {
         border: 1px solid var(--line);
@@ -154,252 +106,80 @@
         display: inline-block; animation: spin 0.8s linear infinite; vertical-align: middle;
       }
       @keyframes spin { to { transform: rotate(360deg); } }
+
+      .hidden { display: none !important; }
     </style>
   </head>
   <body>
     <div class="wrap">
       <header>
-        <div class="title">Mighty Slide</div>
-        <div class="meta" id="meta"></div>
+        <span class="back" id="backBtn" onclick="showMain()">← กลับ</span>
+        <span class="title" id="pageTitle">Mighty Slide</span>
       </header>
 
       <main>
-        <!-- ===== Presets ===== -->
-        <section>
-          <h2>บล็อกสำเร็จรูป</h2>
-          <div class="preset-grid" id="presets"></div>
-        </section>
-
-        <!-- ===== Custom builder ===== -->
-        <section>
-          <h2>ปรับแต่งเอง</h2>
-
-          <div class="live-preview">
-            <div class="box" id="previewBox">ข้อความใหม่</div>
-          </div>
-
-          <div class="field">
-            <label for="text">ข้อความ</label>
-            <input type="text" id="text" value="ข้อความใหม่" oninput="updatePreview()" />
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label for="fontFamily">ฟอนต์</label>
-              <select id="fontFamily" onchange="updatePreview()">
-                <option>Arial</option>
-                <option>Roboto</option>
-                <option>Montserrat</option>
-                <option>Open Sans</option>
-                <option>Lato</option>
-                <option>Times New Roman</option>
-                <option>Georgia</option>
-                <option>Verdana</option>
-                <option>Courier New</option>
-                <option>Sarabun</option>
-              </select>
+        <!-- ===== Main menu ===== -->
+        <div id="mainView">
+          <section>
+            <h2>เครื่องมือ</h2>
+            <div class="tool-btn" onclick="showTextPresets()">
+              <div class="icon">T</div>
+              <div>
+                <div class="label">ข้อความ</div>
+                <div class="hint">หัวข้อ, Quote, Callout, Badge, ข้อความไทย...</div>
+              </div>
             </div>
-            <div class="field" style="max-width: 90px">
-              <label for="fontSize">ขนาด</label>
-              <input type="number" id="fontSize" value="18" min="6" max="400" oninput="updatePreview()" />
-            </div>
-          </div>
+          </section>
 
-          <div class="check">
-            <input type="checkbox" id="bold" onchange="updatePreview()" />
-            <label for="bold">ตัวหนา</label>
-          </div>
+          <section>
+            <h2>บริบทของสไลด์</h2>
+            <button id="refresh" onclick="loadContext()">อ่านบริบทใหม่</button>
+            <div id="ctx">
+              <div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>
+            </div>
+          </section>
+        </div>
 
-          <div class="row">
-            <div class="field">
-              <label for="align">จัดชิด</label>
-              <select id="align" onchange="updatePreview()">
-                <option value="START">ซ้าย</option>
-                <option value="CENTER">กึ่งกลาง</option>
-                <option value="END">ขวา</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="position">ตำแหน่ง</label>
-              <select id="position">
-                <option value="upper-left">บนซ้าย</option>
-                <option value="upper-center">บนกลาง</option>
-                <option value="center">กลาง</option>
-                <option value="lower-left">ล่างซ้าย</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="field">
-              <label for="textColor">สีตัวอักษร</label>
-              <input type="color" id="textColor" value="#202124" oninput="updatePreview()" />
-            </div>
-            <div class="field">
-              <label for="backgroundColor">สีพื้นหลัง</label>
-              <input type="color" id="backgroundColor" value="#fde293" oninput="updatePreview()" disabled />
-            </div>
-          </div>
-          <div class="check">
-            <input type="checkbox" id="hasBackground" onchange="toggle('hasBackground','backgroundColor'); updatePreview()" />
-            <label for="hasBackground">ใส่พื้นหลัง</label>
-          </div>
-
-          <div class="check">
-            <input type="checkbox" id="hasBorder" onchange="toggleBorder(); updatePreview()" />
-            <label for="hasBorder">ใส่กรอบ</label>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label for="borderColor">สีเส้นกรอบ</label>
-              <input type="color" id="borderColor" value="#1a73e8" oninput="updatePreview()" disabled />
-            </div>
-            <div class="field" style="max-width: 110px">
-              <label for="borderWeight">ความหนา</label>
-              <select id="borderWeight" onchange="updatePreview()" disabled>
-                <option value="1">บาง (1)</option>
-                <option value="2">กลาง (2)</option>
-                <option value="4">หนา (4)</option>
-              </select>
-            </div>
-          </div>
-          <div class="field">
-            <label for="borderDash">แบบเส้น</label>
-            <select id="borderDash" onchange="updatePreview()" disabled>
-              <option value="SOLID">เส้นทึบ</option>
-              <option value="DASH">เส้นประ</option>
-              <option value="DOT">เส้นจุด</option>
-              <option value="DASH_DOT">ประ-จุด</option>
-            </select>
-          </div>
-
-          <button class="primary" id="addBtn" onclick="addText()">เพิ่มข้อความลงสไลด์</button>
-          <div class="status" id="status"></div>
-        </section>
-
-        <!-- ===== Context ===== -->
-        <section>
-          <h2>บริบทของสไลด์</h2>
-          <button id="refresh" onclick="loadContext()">อ่านบริบทใหม่</button>
-          <div id="ctx">
-            <div class="state"><span class="spinner"></span> กำลังอ่านบริบท…</div>
-          </div>
-        </section>
+        <!-- ===== Text presets ===== -->
+        <div id="textView" class="hidden">
+          <section>
+            <h2>เลือกบล็อกข้อความ</h2>
+            <div class="preset-grid" id="textPresets"></div>
+            <div class="status" id="status"></div>
+          </section>
+        </div>
       </main>
     </div>
 
     <script>
-      var PRESETS = [
-        {
-          label: 'หัวข้อใหญ่',
-          text: 'หัวข้อ',
-          fontFamily: 'Montserrat', fontSize: 44, bold: true, textColor: '#202124',
-          hasBackground: false, hasBorder: false, width: 420, height: 80, position: 'upper-center', align: 'CENTER'
-        },
-        {
-          label: 'หัวข้อรอง',
-          text: 'หัวข้อรอง',
-          fontFamily: 'Roboto', fontSize: 28, bold: false, textColor: '#5f6368',
-          hasBackground: false, hasBorder: false, width: 360, height: 50, position: 'upper-left', align: 'START'
-        },
-        {
-          label: 'Callout',
-          text: 'เกร็ดน่ารู้',
-          fontFamily: 'Roboto', fontSize: 18, bold: false, textColor: '#1a73e8',
-          hasBackground: true, backgroundColor: '#e8f0fe', hasBorder: true, borderColor: '#1a73e8', borderWeight: 2, borderDash: 'SOLID', width: 320, height: 60, position: 'center', align: 'CENTER'
-        },
-        {
-          label: 'Quote',
-          text: '"คำคม"',
-          fontFamily: 'Georgia', fontSize: 22, bold: false, textColor: '#202124',
-          hasBackground: false, hasBorder: true, borderColor: '#dadce0', borderWeight: 4, borderDash: 'SOLID', width: 420, height: 70, position: 'center', align: 'CENTER'
-        },
-        {
-          label: 'ข้อความไทย',
-          text: 'ข้อความภาษาไทย',
-          fontFamily: 'Sarabun', fontSize: 20, bold: false, textColor: '#202124',
-          hasBackground: false, hasBorder: false, width: 360, height: 50, position: 'upper-left', align: 'START'
-        },
-        {
-          label: 'Badge',
-          text: 'LABEL',
-          fontFamily: 'Arial', fontSize: 14, bold: true, textColor: '#ffffff',
-          hasBackground: true, backgroundColor: '#ea4335', hasBorder: false, width: 120, height: 36, position: 'upper-left', align: 'CENTER'
-        }
+      var TEXT_PRESETS = [
+        { label: 'หัวข้อใหญ่', text: 'หัวข้อ', fontFamily: 'Montserrat', fontSize: 44, bold: true, textColor: '#202124', hasBackground: false, hasBorder: false, width: 520, height: 90, position: 'upper-center', align: 'CENTER' },
+        { label: 'หัวข้อรอง', text: 'หัวข้อรอง', fontFamily: 'Roboto', fontSize: 28, bold: false, textColor: '#5f6368', hasBackground: false, hasBorder: false, width: 420, height: 50, position: 'upper-left', align: 'START' },
+        { label: 'คำบรรยาย', text: 'คำอธิบายสั้น ๆ สำหรับสไลด์นี้', fontFamily: 'Roboto', fontSize: 18, bold: false, textColor: '#3c4043', hasBackground: false, hasBorder: false, width: 520, height: 60, position: 'center', align: 'CENTER' },
+        { label: 'Callout', text: 'เกร็ดน่ารู้', fontFamily: 'Roboto', fontSize: 18, bold: false, textColor: '#1a73e8', hasBackground: true, backgroundColor: '#e8f0fe', hasBorder: true, borderColor: '#1a73e8', borderWeight: 2, borderDash: 'SOLID', width: 360, height: 60, position: 'center', align: 'CENTER' },
+        { label: 'Quote', text: '"คำคมสร้างแรงบันดาลใจ"', fontFamily: 'Georgia', fontSize: 24, bold: false, textColor: '#202124', hasBackground: false, hasBorder: true, borderColor: '#dadce0', borderWeight: 4, borderDash: 'SOLID', width: 500, height: 80, position: 'center', align: 'CENTER' },
+        { label: 'ข้อความไทย', text: 'ข้อความภาษาไทย', fontFamily: 'Sarabun', fontSize: 22, bold: false, textColor: '#202124', hasBackground: false, hasBorder: false, width: 420, height: 50, position: 'upper-left', align: 'START' },
+        { label: 'Badge', text: 'LABEL', fontFamily: 'Arial', fontSize: 14, bold: true, textColor: '#ffffff', hasBackground: true, backgroundColor: '#ea4335', hasBorder: false, width: 120, height: 36, position: 'upper-left', align: 'CENTER' },
+        { label: 'ปุ่ม CTA', text: 'เริ่มเลย', fontFamily: 'Montserrat', fontSize: 16, bold: true, textColor: '#ffffff', hasBackground: true, backgroundColor: '#1a73e8', hasBorder: true, borderColor: '#1a73e8', borderWeight: 1, borderDash: 'SOLID', width: 160, height: 44, position: 'center', align: 'CENTER' },
+        { label: 'กรอบคำพูด', text: 'ประโยคสั้นที่น่าจดจำ', fontFamily: 'Georgia', fontSize: 18, bold: false, textColor: '#202124', hasBackground: true, backgroundColor: '#f8f9fa', hasBorder: true, borderColor: '#9aa0a6', borderWeight: 1, borderDash: 'DOT', width: 420, height: 60, position: 'center', align: 'CENTER' },
+        { label: 'หมายเหตุ', text: 'หมายเหตุ: ใส่ข้อความอธิบายเพิ่มเติม', fontFamily: 'Arial', fontSize: 12, bold: false, textColor: '#5f6368', hasBackground: false, hasBorder: false, width: 520, height: 36, position: 'lower-left', align: 'START' }
       ];
 
       function $(id) { return document.getElementById(id); }
+      function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-      function esc(s) {
-        return String(s == null ? '' : s)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
+      function showTextPresets() {
+        $('mainView').classList.add('hidden');
+        $('textView').classList.remove('hidden');
+        $('backBtn').style.display = 'inline';
+        $('pageTitle').textContent = 'ข้อความ';
       }
 
-      function toggle(checkId, targetId) {
-        $(targetId).disabled = !$(checkId).checked;
-      }
-
-      function toggleBorder() {
-        var on = $('hasBorder').checked;
-        ['borderColor', 'borderWeight', 'borderDash'].forEach(function (id) {
-          $(id).disabled = !on;
-        });
-      }
-
-      function readForm() {
-        return {
-          text: $('text').value,
-          fontFamily: $('fontFamily').value,
-          fontSize: Number($('fontSize').value) || 18,
-          bold: $('bold').checked,
-          align: $('align').value,
-          position: $('position').value,
-          textColor: $('textColor').value,
-          hasBackground: $('hasBackground').checked,
-          backgroundColor: $('backgroundColor').value,
-          hasBorder: $('hasBorder').checked,
-          borderColor: $('borderColor').value,
-          borderWeight: Number($('borderWeight').value) || 1,
-          borderDash: $('borderDash').value
-        };
-      }
-
-      function applyForm(opts) {
-        $('text').value = opts.text || 'ข้อความใหม่';
-        $('fontFamily').value = opts.fontFamily || 'Arial';
-        $('fontSize').value = opts.fontSize || 18;
-        $('bold').checked = !!opts.bold;
-        $('align').value = opts.align || 'START';
-        $('position').value = opts.position || 'upper-left';
-        $('textColor').value = opts.textColor || '#202124';
-        $('hasBackground').checked = !!opts.hasBackground;
-        $('backgroundColor').value = opts.backgroundColor || '#fde293';
-        $('backgroundColor').disabled = !$('hasBackground').checked;
-        $('hasBorder').checked = !!opts.hasBorder;
-        $('borderColor').value = opts.borderColor || '#1a73e8';
-        $('borderWeight').value = opts.borderWeight || 1;
-        $('borderDash').value = opts.borderDash || 'SOLID';
-        ['borderColor', 'borderWeight', 'borderDash'].forEach(function (id) {
-          $(id).disabled = !$('hasBorder').checked;
-        });
-      }
-
-      function updatePreview() {
-        var opts = readForm();
-        var box = $('previewBox');
-        box.textContent = opts.text || ' ';
-        box.style.fontFamily = opts.fontFamily;
-        box.style.fontSize = Math.max(12, Math.min(32, opts.fontSize)) + 'px';
-        box.style.fontWeight = opts.bold ? 'bold' : 'normal';
-        box.style.color = opts.textColor;
-        box.style.backgroundColor = opts.hasBackground ? opts.backgroundColor : 'transparent';
-        box.style.border = opts.hasBorder
-          ? (opts.borderWeight + 'px ' + (opts.borderDash === 'DASH' ? 'dashed' : opts.borderDash === 'DOT' ? 'dotted' : 'solid') + ' ' + opts.borderColor)
-          : 'none';
-        box.style.textAlign =
-          opts.align === 'CENTER' ? 'center' : opts.align === 'END' ? 'right' : 'left';
+      function showMain() {
+        $('mainView').classList.remove('hidden');
+        $('textView').classList.add('hidden');
+        $('backBtn').style.display = 'none';
+        $('pageTitle').textContent = 'Mighty Slide';
       }
 
       function setStatus(msg, kind) {
@@ -408,57 +188,40 @@
         el.className = 'status' + (kind ? ' ' + kind : '');
       }
 
-      function addText(opts) {
-        var finalOpts = opts || readForm();
-        $('addBtn').disabled = true;
-        setStatus('กำลังเพิ่ม…');
+      function insertPreset(i) {
+        var p = TEXT_PRESETS[i];
+        setStatus('กำลังเพิ่ม ' + p.label + '…');
         google.script.run
           .withSuccessHandler(function () {
-            $('addBtn').disabled = false;
-            setStatus('เพิ่มข้อความลงสไลด์แล้ว', 'ok');
+            setStatus('เพิ่ม ' + p.label + ' ลงสไลด์แล้ว', 'ok');
             loadContext();
           })
           .withFailureHandler(function (err) {
-            $('addBtn').disabled = false;
             setStatus('เพิ่มไม่สำเร็จ: ' + (err && err.message ? err.message : err), 'err');
           })
-          .addTextBox(finalOpts);
+          .addTextBox(p);
       }
 
-      function renderPresets() {
-        $('presets').innerHTML = PRESETS.map(function (p, i) {
+      function renderTextPresets() {
+        $('textPresets').innerHTML = TEXT_PRESETS.map(function (p, i) {
+          var borderStyle = p.borderDash === 'DASH' ? 'dashed' : p.borderDash === 'DOT' ? 'dotted' : 'solid';
           return '<div class="preset-card" onclick="insertPreset(' + i + ')">' +
             '<div class="preview" style="background:' + (p.hasBackground ? p.backgroundColor : '#f8f9fa') + ';">' +
               '<span style="font-family:' + p.fontFamily + ';font-size:' + Math.max(12, Math.min(22, p.fontSize)) + 'px;font-weight:' + (p.bold ? 'bold' : 'normal') + ';color:' + p.textColor + ';' +
-                'border:' + (p.hasBorder ? '2px ' + (p.borderDash === 'DASH' ? 'dashed' : p.borderDash === 'DOT' ? 'dotted' : 'solid') + ' ' + p.borderColor : 'none') + '">' +
-                esc(p.text) + '</span>' +
+                'border:' + (p.hasBorder ? '2px ' + borderStyle + ' ' + p.borderColor : 'none') + ';padding:4px 8px;">' + esc(p.text) + '</span>' +
             '</div>' +
             '<div class="label">' + esc(p.label) + '</div>' +
           '</div>';
         }).join('');
       }
 
-      function insertPreset(i) {
-        var p = PRESETS[i];
-        applyForm(p);
-        updatePreview();
-        addText(p);
-      }
-
       function renderContext(ctx) {
-        $('meta').textContent = ctx.slideCount + ' สไลด์ · ' + ctx.wordCount + ' คำ';
+        $('meta') && ($('meta').textContent = ctx.slideCount + ' สไลด์ · ' + ctx.wordCount + ' คำ');
         var box = $('ctx');
-        if (!ctx.slides.length) {
-          box.innerHTML = '<div class="state">ไม่มีสไลด์</div>';
-          return;
-        }
+        if (!ctx.slides.length) { box.innerHTML = '<div class="state">ไม่มีสไลด์</div>'; return; }
         box.innerHTML = ctx.slides.map(function (s) {
           var parts = ['<div class="slide"><h3>สไลด์ ' + s.index + '</h3>'];
-          if (s.texts && s.texts.length) {
-            parts.push('<div class="txt">' + esc(s.texts.join('\n')) + '</div>');
-          } else {
-            parts.push('<div class="empty">(ไม่มีข้อความ)</div>');
-          }
+          if (s.texts && s.texts.length) parts.push('<div class="txt">' + esc(s.texts.join('\n')) + '</div>'); else parts.push('<div class="empty">(ไม่มีข้อความ)</div>');
           if (s.notes) parts.push('<div class="notes">โน้ต: ' + esc(s.notes) + '</div>');
           var tags = [];
           if (s.layout) tags.push(s.layout);
@@ -480,8 +243,7 @@
           .readPresentationContext();
       }
 
-      renderPresets();
-      updatePreview();
+      renderTextPresets();
       loadContext();
     </script>
   </body>
