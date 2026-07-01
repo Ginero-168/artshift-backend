@@ -55,11 +55,16 @@ function animateTextToSlide(opts) {
 
   var code = response.getResponseCode();
   var body = response.getContentText();
-  if (code !== 200) {
-    throw new Error('Backend error (' + code + '): ' + body);
+  if (code !== 200 || !body) {
+    throw new Error('Backend error (' + code + '): ' + (body || 'empty response'));
   }
 
-  var json = JSON.parse(body);
+  var json;
+  try {
+    json = JSON.parse(body);
+  } catch (parseErr) {
+    throw new Error('JSON parse failed: ' + parseErr.message + ' (body length ' + body.length + ', code ' + code + ')');
+  }
   if (!json.ok || !json.data) {
     throw new Error('Backend returned: ' + (json.error || 'no data'));
   }
