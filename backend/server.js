@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { textToGif } = require('./animate');
+const { textToGif, ANIMATION_LABELS } = require('./animate');
 
 const app = express();
 app.use(cors());
@@ -11,6 +11,15 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 app.get('/health', (req, res) => {
   res.json({ ok: true });
+});
+
+/**
+ * GET /api/animations
+ * Returns the list of available animation ids and labels.
+ */
+app.get('/api/animations', (req, res) => {
+  const list = Object.keys(ANIMATION_LABELS).map((id) => ({ id, label: ANIMATION_LABELS[id] }));
+  res.json({ ok: true, animations: list });
 });
 
 /**

@@ -18,10 +18,62 @@ const DEFAULT_STYLE = {
 
 const FONT_WEIGHT = { false: 'normal', true: 'bold' };
 
+// Animation registry. Each function receives (t, width, height, style) and returns
+// transformation + render hints for the frame.
+const ANIMATIONS = {
+  'fade-in': (t) => ({ alpha: easeOutQuad(t), scale: 0.95 + 0.05 * easeOutQuad(t) }),
+  'slide-up': (t, w, h) => ({ alpha: easeOutQuad(t), ty: h * 0.15 * (1 - easeOutQuad(t)) }),
+  'slide-down': (t, w, h) => ({ alpha: easeOutQuad(t), ty: -h * 0.15 * (1 - easeOutQuad(t)) }),
+  'slide-left': (t, w, h) => ({ alpha: easeOutQuad(t), tx: -w * 0.15 * (1 - easeOutQuad(t)) }),
+  'slide-right': (t, w, h) => ({ alpha: easeOutQuad(t), tx: w * 0.15 * (1 - easeOutQuad(t)) }),
+  'zoom-in': (t) => ({ alpha: easeOutQuad(t), scale: 0.2 + 0.8 * easeOutBack(t) }),
+  'zoom-out': (t) => ({ alpha: easeOutQuad(t), scale: 1.3 - 0.3 * easeOutQuad(t) }),
+  'bounce': (t, w, h) => ({ alpha: t > 0 ? 1 : 0, ty: -h * 0.5 * (1 - bounceEase(t)) }),
+  'pulse': (t) => {
+    const s = 1 + 0.12 * Math.sin(t * Math.PI * 2);
+    return { alpha: easeOutQuad(Math.min(t * 2, 1)), scale: s };
+  },
+  'shake': (t) => ({ alpha: easeOutQuad(t), tx: 8 * Math.sin(t * Math.PI * 6) * (1 - t) }),
+  'rotate-in': (t) => ({ alpha: easeOutQuad(t), rotation: -90 * (1 - easeOutQuad(t)) }),
+  'flip-x': (t) => ({ alpha: easeOutQuad(t), scaleX: -1 + 2 * easeOutQuad(t), scaleY: 1 }),
+  'flip-y': (t) => ({ alpha: easeOutQuad(t), scaleX: 1, scaleY: -1 + 2 * easeOutQuad(t) }),
+  'elastic': (t) => ({ alpha: easeOutQuad(t), scale: easeOutElastic(t) }),
+  'pop': (t) => ({ alpha: easeOutQuad(t), scale: easeOutBack(t) }),
+  'wave': (t, w, h) => ({ alpha: easeOutQuad(t), perChar: true, wave: t }),
+  'typewriter': (t, w, h) => ({ alpha: 1, typewriter: t }),
+  'color-cycle': (t) => ({ alpha: easeOutQuad(t), color: hslToHex(t * 360) }),
+  'blur-in': (t) => ({ alpha: easeOutQuad(t), scale: 1.05 - 0.05 * (1 - t), shadow: true, shadowBlur: 20 * (1 - t) }),
+  'heartbeat': (t) => {
+    const beat = t < 0.2 ? 1 + 0.25 * Math.sin(t * Math.PI * 10) : 1;
+    return { alpha: easeOutQuad(Math.min(t * 3, 1)), scale: beat };
+  }
+};
+
+const ANIMATION_LABELS = {
+  'fade-in': 'Fade in',
+  'slide-up': 'Slide up',
+  'slide-down': 'Slide down',
+  'slide-left': 'Slide left',
+  'slide-right': 'Slide right',
+  'zoom-in': 'Zoom in',
+  'zoom-out': 'Zoom out',
+  'bounce': 'Bounce',
+  'pulse': 'Pulse',
+  'shake': 'Shake',
+  'rotate-in': 'Rotate in',
+  'flip-x': 'Flip X',
+  'flip-y': 'Flip Y',
+  'elastic': 'Elastic',
+  'pop': 'Pop',
+  'wave': 'Wave',
+  'typewriter': 'Typewriter',
+  'color-cycle': 'Color cycle',
+  'blur-in': 'Blur in',
+  'heartbeat': 'Heartbeat'
+};
+
 /**
  * Render animated text into a GIF using Node canvas (no Puppeteer/Chrome).
- * Supported animations: fade-in, slide-up, slide-left, zoom-in, bounce.
- *
  * @param {Object} opts
  * @returns {Buffer} GIF bytes
  */
@@ -43,7 +95,6 @@ function textToGif({ text, style, animation, width, height, duration }) {
   const fontSize = Math.max(8, Number(s.fontSize) || 64);
   ctx.font = fontWeight + ' ' + fontSize + 'px "' + fontFamily + '", sans-serif';
   ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
 
   for (let i = 0; i < totalFrames; i++) {
     const t = i / (totalFrames - 1 || 1);
@@ -66,8 +117,6 @@ function containsThai(text) {
 
 function resolveFontFamily(text, requestedFamily) {
   const family = cleanFontFamily(requestedFamily);
-  // If the text contains Thai characters, force Sarabun because it is the only
-  // Thai font we bundle on the server.
   if (containsThai(text) && family.toLowerCase() !== 'sarabun') {
     return 'Sarabun';
   }
@@ -79,52 +128,63 @@ function drawFrame(ctx, text, width, height, style, animation, t) {
   ctx.fillStyle = style.background || DEFAULT_STYLE.background;
   ctx.fillRect(0, 0, width, height);
 
+  const animator = ANIMATIONS[animation] || ANIMATIONS['fade-in'];
+  const hints = animator(t, width, height, style);
+
   ctx.save();
-  ctx.font = (style.bold ? 'bold ' : 'normal ') + style.fontSize + 'px "' + resolveFontFamily(text, style.fontFamily) + '", sans-serif';
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = style.color || DEFAULT_STYLE.color;
+  ctx.globalAlpha = Math.max(0, Math.min(1, hints.alpha == null ? 1 : hints.alpha));
 
   const cx = width / 2;
   const cy = height / 2;
+  ctx.translate(cx + (hints.tx || 0), cy + (hints.ty || 0));
+  if (hints.rotation) ctx.rotate((hints.rotation * Math.PI) / 180);
+  const sx = hints.scaleX == null ? (hints.scale || 1) : hints.scaleX;
+  const sy = hints.scaleY == null ? (hints.scale || 1) : hints.scaleY;
+  ctx.scale(sx, sy);
 
-  let alpha = 1;
-  let tx = 0;
-  let ty = 0;
-  let scale = 1;
+  ctx.font = (style.bold ? 'bold ' : 'normal ') + style.fontSize + 'px "' + resolveFontFamily(text, style.fontFamily) + '", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
 
-  switch (animation) {
-    case 'fade-in':
-      alpha = easeOutQuad(t);
-      scale = 0.95 + 0.05 * easeOutQuad(t);
-      break;
-    case 'slide-up':
-      alpha = easeOutQuad(t);
-      ty = 40 * (1 - easeOutQuad(t));
-      break;
-    case 'slide-left':
-      alpha = easeOutQuad(t);
-      tx = -80 * (1 - easeOutQuad(t));
-      break;
-    case 'zoom-in':
-      alpha = easeOutQuad(t);
-      scale = 0.2 + 0.8 * easeOutBack(t);
-      break;
-    case 'bounce':
-      alpha = t > 0 ? 1 : 0;
-      ty = -height * 0.6 * (1 - bounceEase(t));
-      break;
-    default:
-      alpha = easeOutQuad(t);
+  const textColor = hints.color || style.color || DEFAULT_STYLE.color;
+  ctx.fillStyle = textColor;
+
+  if (hints.shadow) {
+    ctx.shadowColor = textColor;
+    ctx.shadowBlur = hints.shadowBlur || 0;
+  } else {
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
   }
 
-  ctx.globalAlpha = Math.max(0, Math.min(1, alpha));
-  ctx.translate(cx + tx, cy + ty);
-  ctx.scale(scale, scale);
-  ctx.fillText(text, 0, 0);
+  if (hints.typewriter) {
+    const visible = Math.max(0, Math.ceil(text.length * hints.typewriter));
+    const visibleText = text.slice(0, visible);
+    ctx.fillText(visibleText, 0, 0);
+  } else if (hints.wave != null) {
+    drawWaveText(ctx, text, 0, 0, hints.wave);
+  } else {
+    ctx.fillText(text, 0, 0);
+  }
+
   ctx.restore();
 }
 
+function drawWaveText(ctx, text, cx, cy, t) {
+  const metrics = ctx.measureText(text);
+  const totalWidth = metrics.width;
+  const chars = Array.from(text);
+  const charWidths = chars.map((ch) => ctx.measureText(ch).width);
+  let x = -totalWidth / 2;
+  for (let i = 0; i < chars.length; i++) {
+    const progress = chars.length > 1 ? i / (chars.length - 1) : 0;
+    const yOffset = 12 * Math.sin((progress + t) * Math.PI * 2) * t;
+    ctx.fillText(chars[i], x + charWidths[i] / 2, yOffset);
+    x += charWidths[i];
+  }
+}
+
+// Easing functions.
 function easeOutQuad(t) {
   return 1 - (1 - t) * (1 - t);
 }
@@ -135,15 +195,33 @@ function easeOutBack(t) {
   return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
 }
 
+function easeOutElastic(t) {
+  const c4 = (2 * Math.PI) / 3;
+  return t === 0 ? 0 : t === 1 ? 1 : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+}
+
 function bounceEase(t) {
-  // Approximate a single bounce: up then settle.
   if (t < 0.4) {
-    // move up quickly
     return 1 - Math.pow(1 - t / 0.4, 2);
   }
-  // settle with a small bounce
   const remaining = (t - 0.4) / 0.6;
   return 1 - 0.12 * Math.sin(remaining * Math.PI * 2) * (1 - remaining);
 }
 
-module.exports = { textToGif };
+function hslToHex(h) {
+  const s = 0.85;
+  const l = 0.55;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+  const m = l - c / 2;
+  let r, g, b;
+  if (h < 60) { r = c; g = x; b = 0; }
+  else if (h < 120) { r = x; g = c; b = 0; }
+  else if (h < 180) { r = 0; g = c; b = x; }
+  else if (h < 240) { r = 0; g = x; b = c; }
+  else if (h < 300) { r = x; g = 0; b = c; }
+  else { r = c; g = 0; b = x; }
+  return '#' + [r, g, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+
+module.exports = { textToGif, ANIMATIONS, ANIMATION_LABELS };
