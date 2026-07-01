@@ -89,7 +89,11 @@ app.post('/api/animate', async (req, res) => {
       ok: true,
       mime: 'image/gif',
       data: b64,
-      url: 'data:image/gif;base64,' + b64
+      url: 'data:image/gif;base64,' + b64,
+      debug: {
+        receivedTransparent: !!payload.transparent,
+        receivedBackground: style && style.background
+      }
     });
   } catch (err) {
     console.error('Animate error:', err);
