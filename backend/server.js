@@ -23,6 +23,36 @@ app.get('/api/animations', (req, res) => {
 });
 
 /**
+ * GET /api/preview/:id
+ * Returns a small example GIF for the requested animation id.
+ */
+app.get('/api/preview/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const buffer = await textToGif({
+      text: 'Mighty',
+      style: {
+        fontFamily: 'Sarabun, sans-serif',
+        fontSize: 24,
+        color: '#ffffff',
+        background: '#1a73e8',
+        bold: true
+      },
+      animation: id,
+      width: 160,
+      height: 60,
+      duration: 1.5
+    });
+    res.set('Content-Type', 'image/gif');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(buffer);
+  } catch (err) {
+    console.error('Preview error:', err);
+    res.status(500).json({ ok: false, error: err.message || String(err) });
+  }
+});
+
+/**
  * POST /api/animate
  * Body: { text, style, animation, width?, height?, duration? }
  * Response: { ok: true, url: string, mime: 'image/gif' }
