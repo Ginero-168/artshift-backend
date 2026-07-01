@@ -67,13 +67,6 @@ app.post('/api/animate', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'text is required' });
     }
 
-    console.log('animate request:', {
-      text: text,
-      animation: animation,
-      background: style && style.background,
-      transparent: payload.transparent
-    });
-
     const buffer = await textToGif({
       text,
       style: style || {},
@@ -89,11 +82,7 @@ app.post('/api/animate', async (req, res) => {
       ok: true,
       mime: 'image/gif',
       data: b64,
-      url: 'data:image/gif;base64,' + b64,
-      debug: {
-        receivedTransparent: !!payload.transparent,
-        receivedBackground: style && style.background
-      }
+      url: 'data:image/gif;base64,' + b64
     });
   } catch (err) {
     console.error('Animate error:', err);

@@ -714,8 +714,7 @@
         google.script.run
           .withSuccessHandler(function (res) {
             $('aSubmit').disabled = false;
-            var debug = res && res.debug ? ' (transparent=' + res.debug.receivedTransparent + ')' : '';
-            setAnimateStatus('แทรก GIF ลงสไลด์แล้ว' + debug, 'ok');
+            setAnimateStatus('แทรก GIF ลงสไลด์แล้ว', 'ok');
             loadContext();
           })
           .withFailureHandler(function (err) {
