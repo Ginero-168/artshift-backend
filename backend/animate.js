@@ -94,8 +94,9 @@ function textToGif({ text, style, animation, width, height, duration, transparen
   encoder.setQuality(10);
 
   if (isTransparent) {
-    const key = hexToRgb(TRANSPARENT_KEY);
-    encoder.setTransparent(key.r, key.g, key.b);
+    // gifencoder's setTransparent expects a single packed 0xRRGGBB integer,
+    // not separate (r, g, b) arguments.
+    encoder.setTransparent(hexToPacked(TRANSPARENT_KEY));
   }
 
   // Supersampling: render each frame at a higher resolution then scale down
@@ -250,6 +251,11 @@ function hexToRgb(hex) {
   const v = String(hex).replace('#', '');
   const bigint = parseInt(v.length === 3 ? v.split('').map((c) => c + c).join('') : v, 16);
   return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+}
+
+function hexToPacked(hex) {
+  const v = String(hex).replace('#', '');
+  return parseInt(v.length === 3 ? v.split('').map((c) => c + c).join('') : v, 16);
 }
 
 module.exports = { textToGif, ANIMATIONS, ANIMATION_LABELS };
