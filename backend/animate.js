@@ -1,5 +1,12 @@
-const { createCanvas } = require('canvas');
+const { createCanvas, registerFont } = require('canvas');
 const GIFEncoder = require('gifencoder');
+const path = require('path');
+
+// Register bundled Thai fonts so node-canvas can render Thai text on servers
+// that do not have system Thai fonts installed.
+const FONTS_DIR = path.join(__dirname, 'fonts');
+registerFont(path.join(FONTS_DIR, 'Sarabun-Regular.ttf'), { family: 'Sarabun', weight: 'normal' });
+registerFont(path.join(FONTS_DIR, 'Sarabun-Bold.ttf'), { family: 'Sarabun', weight: 'bold' });
 
 const DEFAULT_STYLE = {
   fontFamily: 'Sarabun, sans-serif',
@@ -32,7 +39,7 @@ function textToGif({ text, style, animation, width, height, duration }) {
   const ctx = canvas.getContext('2d');
 
   const fontWeight = FONT_WEIGHT[!!s.bold];
-  const fontFamily = cleanFontFamily(s.fontFamily);
+  const fontFamily = resolveFontFamily(text, s.fontFamily);
   const fontSize = Math.max(8, Number(s.fontSize) || 64);
   ctx.font = fontWeight + ' ' + fontSize + 'px "' + fontFamily + '", sans-serif';
   ctx.textBaseline = 'middle';
@@ -53,13 +60,27 @@ function cleanFontFamily(name) {
   return n.replace(/['"]/g, '');
 }
 
+function containsThai(text) {
+  return /\p{Script=Thai}/u.test(String(text));
+}
+
+function resolveFontFamily(text, requestedFamily) {
+  const family = cleanFontFamily(requestedFamily);
+  // If the text contains Thai characters, force Sarabun because it is the only
+  // Thai font we bundle on the server.
+  if (containsThai(text) && family.toLowerCase() !== 'sarabun') {
+    return 'Sarabun';
+  }
+  return family;
+}
+
 function drawFrame(ctx, text, width, height, style, animation, t) {
   // Clear background.
   ctx.fillStyle = style.background || DEFAULT_STYLE.background;
   ctx.fillRect(0, 0, width, height);
 
   ctx.save();
-  ctx.font = (style.bold ? 'bold ' : 'normal ') + style.fontSize + 'px "' + cleanFontFamily(style.fontFamily) + '", sans-serif';
+  ctx.font = (style.bold ? 'bold ' : 'normal ') + style.fontSize + 'px "' + resolveFontFamily(text, style.fontFamily) + '", sans-serif';
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
   ctx.fillStyle = style.color || DEFAULT_STYLE.color;
