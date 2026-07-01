@@ -18,6 +18,11 @@ const DEFAULT_STYLE = {
 
 const FONT_WEIGHT = { false: 'normal', true: 'bold' };
 
+// GIF only supports one transparent color in the palette. Use this unlikely
+// key color when transparent mode is requested; the encoder will mark it as
+// transparent so it shows as see-through in Google Slides.
+const TRANSPARENT_KEY = '#ff00ff';
+
 // Animation registry. Each function receives (t, width, height, style) and returns
 // transformation + render hints for the frame.
 const ANIMATIONS = {
@@ -77,8 +82,9 @@ const ANIMATION_LABELS = {
  * @param {Object} opts
  * @returns {Buffer} GIF bytes
  */
-function textToGif({ text, style, animation, width, height, duration }) {
+function textToGif({ text, style, animation, width, height, duration, transparent }) {
   const s = Object.assign({}, DEFAULT_STYLE, style);
+  const isTransparent = !!transparent;
   const fps = 20;
   const totalFrames = Math.max(1, Math.round(Number(duration) * fps));
   const encoder = new GIFEncoder(width, height);
@@ -86,6 +92,11 @@ function textToGif({ text, style, animation, width, height, duration }) {
   encoder.setRepeat(0);
   encoder.setDelay(1000 / fps);
   encoder.setQuality(10);
+
+  if (isTransparent) {
+    const key = hexToRgb(TRANSPARENT_KEY);
+    encoder.setTransparent(key.r, key.g, key.b);
+  }
 
   const canvas = createCanvas(width, height);
   const ctx = canvas.getContext('2d');
@@ -98,7 +109,7 @@ function textToGif({ text, style, animation, width, height, duration }) {
 
   for (let i = 0; i < totalFrames; i++) {
     const t = i / (totalFrames - 1 || 1);
-    drawFrame(ctx, text, width, height, s, animation, t);
+    drawFrame(ctx, text, width, height, s, animation, t, isTransparent);
     encoder.addFrame(ctx);
   }
 
@@ -123,9 +134,10 @@ function resolveFontFamily(text, requestedFamily) {
   return family;
 }
 
-function drawFrame(ctx, text, width, height, style, animation, t) {
-  // Clear background.
-  ctx.fillStyle = style.background || DEFAULT_STYLE.background;
+function drawFrame(ctx, text, width, height, style, animation, t, isTransparent) {
+  // Clear background. When transparent mode is on, paint with the key color
+  // that the encoder will mark as transparent.
+  ctx.fillStyle = isTransparent ? TRANSPARENT_KEY : (style.background || DEFAULT_STYLE.background);
   ctx.fillRect(0, 0, width, height);
 
   const animator = ANIMATIONS[animation] || ANIMATIONS['fade-in'];
@@ -222,6 +234,12 @@ function hslToHex(h) {
   else if (h < 300) { r = x; g = 0; b = c; }
   else { r = c; g = 0; b = x; }
   return '#' + [r, g, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, '0')).join('');
+}
+
+function hexToRgb(hex) {
+  const v = String(hex).replace('#', '');
+  const bigint = parseInt(v.length === 3 ? v.split('').map((c) => c + c).join('') : v, 16);
+  return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
 }
 
 module.exports = { textToGif, ANIMATIONS, ANIMATION_LABELS };

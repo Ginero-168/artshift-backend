@@ -315,6 +315,10 @@
               <input type="checkbox" id="aBold" checked />
               <label for="aBold">ตัวหนา</label>
             </div>
+            <div class="check">
+              <input type="checkbox" id="aTransparent" />
+              <label for="aTransparent">พื้นหลังโปร่งใส</label>
+            </div>
             <div class="row">
               <div class="field">
                 <label for="aTextColor">สีตัวอักษร</label>
@@ -637,7 +641,12 @@
 
       function getPreviewUrl(animationId) {
         var backend = normalizeBackendUrl($('aBackend').value);
-        return backend.replace(/\/api\/animate(\/|$)/, '/api/preview/' + animationId);
+        var transparent = $('aTransparent') && $('aTransparent').checked;
+        var url = backend.replace(/\/api\/animate(\/|$)/, '/api/preview/' + animationId);
+        if (transparent) {
+          url += (url.indexOf('?') === -1 ? '?' : '&') + 'transparent=1';
+        }
+        return url;
       }
 
       function renderAnimGrid() {
@@ -693,6 +702,7 @@
           fontFamily: $('aFont').value + ', sans-serif',
           fontSize: Number($('aFontSize').value) || 64,
           bold: $('aBold').checked,
+          transparent: $('aTransparent').checked,
           textColor: $('aTextColor').value,
           backgroundColor: $('aBgColor').value,
           width: Number($('aWidth').value) || 640,

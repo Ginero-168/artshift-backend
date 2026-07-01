@@ -41,7 +41,8 @@ app.get('/api/preview/:id', async (req, res) => {
       animation: id,
       width: 160,
       height: 60,
-      duration: 1.5
+      duration: 1.5,
+      transparent: req.query.transparent === '1' || req.query.transparent === 'true'
     });
     res.set('Content-Type', 'image/gif');
     res.set('Cache-Control', 'public, max-age=86400');
@@ -54,7 +55,7 @@ app.get('/api/preview/:id', async (req, res) => {
 
 /**
  * POST /api/animate
- * Body: { text, style, animation, width?, height?, duration? }
+ * Body: { text, style, animation, width?, height?, duration?, transparent? }
  * Response: { ok: true, url: string, mime: 'image/gif' }
  */
 app.post('/api/animate', async (req, res) => {
@@ -72,7 +73,8 @@ app.post('/api/animate', async (req, res) => {
       animation: animation || 'fade-in',
       width: payload.width || 640,
       height: payload.height || 160,
-      duration: payload.duration || 2
+      duration: payload.duration || 2,
+      transparent: !!payload.transparent
     });
 
     const b64 = buffer.toString('base64');

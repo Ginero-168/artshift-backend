@@ -42,7 +42,8 @@ function animateTextToSlide(opts) {
     },
     width: Number(opts.width) || 640,
     height: Number(opts.height) || 160,
-    duration: Number(opts.duration) || 2
+    duration: Number(opts.duration) || 2,
+    transparent: !!opts.transparent
   };
 
   var response = UrlFetchApp.fetch(backendUrl, {
