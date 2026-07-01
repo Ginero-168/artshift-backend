@@ -67,6 +67,13 @@ app.post('/api/animate', async (req, res) => {
       return res.status(400).json({ ok: false, error: 'text is required' });
     }
 
+    console.log('animate request:', {
+      text: text,
+      animation: animation,
+      background: style && style.background,
+      transparent: payload.transparent
+    });
+
     const buffer = await textToGif({
       text,
       style: style || {},
