@@ -18,10 +18,11 @@ const DEFAULT_STYLE = {
 
 const FONT_WEIGHT = { false: 'normal', true: 'bold' };
 
-// GIF only supports one transparent color in the palette. Use this unlikely
-// key color when transparent mode is requested; the encoder will mark it as
-// transparent so it shows as see-through in Google Slides.
-const TRANSPARENT_KEY = '#ff00ff';
+// GIF only supports one transparent color in the palette. When transparent mode
+// is requested, we use the selected background color as the matte color. This
+// makes text anti-aliasing blend against the chosen color before that color is
+// marked transparent, avoiding the bright magenta fringes caused by a fixed key.
+const DEFAULT_TRANSPARENT_KEY = '#1a73e8';
 
 // Animation registry. Each function receives (t, width, height, style) and returns
 // transformation + render hints for the frame.
@@ -93,8 +94,9 @@ function textToGif({ text, style, animation, width, height, duration, transparen
   encoder.setDelay(1000 / fps);
   encoder.setQuality(10);
 
+  const keyColor = isTransparent ? (s.background || DEFAULT_TRANSPARENT_KEY) : null;
   if (isTransparent) {
-    const key = hexToRgb(TRANSPARENT_KEY);
+    const key = hexToRgb(keyColor);
     encoder.setTransparent(key.r, key.g, key.b);
   }
 
@@ -135,9 +137,10 @@ function resolveFontFamily(text, requestedFamily) {
 }
 
 function drawFrame(ctx, text, width, height, style, animation, t, isTransparent) {
-  // Clear background. When transparent mode is on, paint with the key color
-  // that the encoder will mark as transparent.
-  ctx.fillStyle = isTransparent ? TRANSPARENT_KEY : (style.background || DEFAULT_STYLE.background);
+  // Clear background. When transparent mode is on, paint with the chosen key
+  // (matte) color so the encoder can mark it transparent while keeping the text
+  // anti-aliased against that color.
+  ctx.fillStyle = isTransparent ? (style.background || DEFAULT_TRANSPARENT_KEY) : (style.background || DEFAULT_STYLE.background);
   ctx.fillRect(0, 0, width, height);
 
   const animator = ANIMATIONS[animation] || ANIMATIONS['fade-in'];
