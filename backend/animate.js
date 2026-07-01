@@ -98,19 +98,29 @@ function textToGif({ text, style, animation, width, height, duration, transparen
     encoder.setTransparent(key.r, key.g, key.b);
   }
 
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext('2d');
+  // Supersampling: render each frame at a higher resolution then scale down
+  // to reduce transparent fringing and improve edge quality.
+  const scale = 2;
+  const highCanvas = createCanvas(width * scale, height * scale);
+  const highCtx = highCanvas.getContext('2d');
+  highCtx.scale(scale, scale);
+  highCtx.textBaseline = 'middle';
+
+  const outputCanvas = createCanvas(width, height);
+  const outputCtx = outputCanvas.getContext('2d');
+  outputCtx.imageSmoothingEnabled = true;
 
   const fontWeight = FONT_WEIGHT[!!s.bold];
   const fontFamily = resolveFontFamily(text, s.fontFamily);
   const fontSize = Math.max(8, Number(s.fontSize) || 64);
-  ctx.font = fontWeight + ' ' + fontSize + 'px "' + fontFamily + '", sans-serif';
-  ctx.textBaseline = 'middle';
+  highCtx.font = fontWeight + ' ' + fontSize + 'px "' + fontFamily + '", sans-serif';
 
   for (let i = 0; i < totalFrames; i++) {
     const t = i / (totalFrames - 1 || 1);
-    drawFrame(ctx, text, width, height, s, animation, t, isTransparent);
-    encoder.addFrame(ctx);
+    drawFrame(highCtx, text, width, height, s, animation, t, isTransparent);
+    outputCtx.clearRect(0, 0, width, height);
+    outputCtx.drawImage(highCanvas, 0, 0, width, height);
+    encoder.addFrame(outputCtx);
   }
 
   encoder.finish();
