@@ -83,8 +83,8 @@ function insertImageFromBase64_(base64, width, height) {
 
   var bytes = Utilities.base64Decode(base64);
   var blob = Utilities.newBlob(bytes, 'image/gif', 'animated-text.gif');
-  var left = (slide.getPageWidth() - width) / 2;
-  var top = (slide.getPageHeight() - height) / 2;
+  var left = (presentation.getPageWidth() - width) / 2;
+  var top = (presentation.getPageHeight() - height) / 2;
 
   // Center the image on the slide.
   var image = slide.insertImage(blob, left, top, width, height);
